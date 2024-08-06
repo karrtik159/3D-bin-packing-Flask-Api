@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Add Item</h1>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        {{ form.csrf_token }}
+        {{ form.name.label }} {{ form.name(size=32) }}<br>
+        {{ form.whd.label }} {{ form.whd(size=32) }}<br>
+        {{ form.count.label }} {{ form.count(size=32) }}<br>
+        {{ form.updown.label }} {{ form.updown(size=32) }}<br>
+        {{ form.type.label }} {{ form.type(size=32) }}<br>
+        {{ form.level.label }} {{ form.level(size=32) }}<br>
+        {{ form.loadbear.label }} {{ form.loadbear(size=32) }}<br>
+        {{ form.weight.label }} {{ form.weight(size=32) }}<br>
+        {{ form.color.label }} {{ form.color(size=32) }}<br>
+        <input type="submit" value="Add Item">
+    </form>
+{% endblock %}
