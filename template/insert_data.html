@@ -1,0 +1,279 @@
+
+{% extends "layout.html" %} 
+{% block st %}
+<style>
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .response {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+    }
+  </style>
+  {% endblock %}
+{% block content %}
+<div class="container" >
+  <h1>Insert Data</h1>
+  <form id="jsonForm">
+    <label for="jsonData">JSON Data:</label><br />
+    <textarea id="jsonData" name="jsonData" required></textarea><br />
+    <button type="submit">Submit</button>
+  </form>
+  <div class="response" id="response"></div>
+    <h1>Sample Data</h1>
+    <form id="jsondata">
+      <label for="jsonData">JSON Data:</label><br />
+      <textarea id="jsonData" name="jsonData" required >{
+        "box": [
+          {
+            "name": "example7-Bin1",
+            "WHD": [5, 5, 5],
+            "weight": 100,
+            "coner": 0,
+            "openTop": [0]
+          },
+          {
+            "name": "example7-Bin2",
+            "WHD": [3, 3, 5],
+            "weight": 100,
+            "coner": 0,
+            "openTop": [0]
+          }
+        ],
+        "item": [
+          {
+            "name": "Box-1",
+            "WHD": [5, 4, 1],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "yellow",
+            "type": 1
+          },
+          {
+            "name": "Box-2",
+            "WHD": [1, 2, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-3",
+            "WHD": [1, 2, 3],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-4",
+            "WHD": [1, 2, 2],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-5",
+            "WHD": [1, 2, 3],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-6",
+            "WHD": [1, 2, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-7",
+            "WHD": [1, 2, 2],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-8",
+            "WHD": [1, 2, 3],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-9",
+            "WHD": [1, 2, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-10",
+            "WHD": [1, 2, 3],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-11",
+            "WHD": [1, 2, 2],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-12",
+            "WHD": [5, 4, 1],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "pink",
+            "type": 1
+          },
+          {
+            "name": "Box-13",
+            "WHD": [1, 1, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-14",
+            "WHD": [1, 2, 1],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "pink",
+            "type": 1
+          },
+          {
+            "name": "Box-15",
+            "WHD": [1, 2, 1],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "pink",
+            "type": 1
+          },
+          {
+            "name": "Box-16",
+            "WHD": [1, 1, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-17",
+            "WHD": [1, 1, 4],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "olive",
+            "type": 1
+          },
+          {
+            "name": "Box-18",
+            "WHD": [5, 4, 2],
+            "weight": 1,
+            "level": 1,
+            "loadbear": 100,
+            "updown": true,
+            "color": "brown",
+            "type": 1
+          }
+        ]
+      }
+      </textarea><br />
+
+    </form>
+  </div>
+  
+<script>
+  document
+    .getElementById("jsonForm")
+    .addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      var jsonData = document.getElementById("jsonData").value;
+      fetch("/insert_data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("response").innerHTML =
+            "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        })
+        .catch((error) => {
+          document.getElementById("response").innerHTML =
+            '<p style="color: red;">Error: ' + error.message + "</p>";
+        });
+    });
+</script>
+{% endblock %}

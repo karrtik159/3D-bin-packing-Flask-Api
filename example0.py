@@ -1,4 +1,4 @@
-from py3dbp import Packer, Bin, Item, Painter
+from py3dbp import Packer, Bin, Item#, Painter
 import time
 start = time.time()
 

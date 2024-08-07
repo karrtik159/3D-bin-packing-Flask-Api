@@ -3,29 +3,18 @@ from flask_cors import cross_origin
 from py3dbp import Packer, Bin, Item, Painter
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import SQLAlchemyError
-
+from utils import makeDictBox, makeDictItem,getBoxAndItem,Stats
+# from models import TBox, TItem
 from forms import BoxForm, ItemForm
 
 app = Flask(__name__,template_folder="template",static_folder="static")
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-db = SQLAlchemy(app)
 
-def randColor(s):
-    ''' '''
-    random.seed(s)
-    color = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+db = SQLAlchemy()
 
-    return color
-
-@app.before_request
-def create_tables():
-    # The following line will remove this handler, making it
-    # only run on the first request
-    app.before_request_funcs[None].remove(create_tables)
-
-    db.create_all()
+db.app = app
+db.init_app(app)
 
 class TBox(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -46,6 +35,13 @@ class TItem(db.Model):
     loadbear = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
     color = db.Column(db.Integer, nullable=False)
+
+@app.before_request
+def create_tables():
+    # The following line will remove this handler, making it
+    # only run on the first request
+    app.before_request_funcs[None].remove(create_tables)
+    db.create_all()
 
 @app.route('/')
 def index2():
@@ -157,126 +153,14 @@ def delete_item(item_id):
     flash('Item deleted!', 'success')
     return redirect(url_for('index2'))
 
-def makeDictBox(box):
-    position = (int(box.width)/2, int(box.height)/2, int(box.depth)/2)
-    r = {
-        "partNumber": box.partno,
-        "position": position,
-        "WHD": (int(box.width), int(box.height), int(box.depth)),
-        "weight": int(box.max_weight),
-        "gravity": box.gravity
-    }
-    return [r]
-def makeDictItem(item):
-    if item.rotation_type == 0:
-        pos = (int(item.position[0]) + int(item.width)//2, int(item.position[1]) + int(item.height)//2, int(item.position[2]) + int(item.depth)//2)
-        whd = (int(item.width), int(item.height), int(item.depth))
-    elif item.rotation_type == 1:
-        pos = (int(item.position[0]) + int(item.height)//2, int(item.position[1]) + int(item.width)//2, int(item.position[2]) + int(item.depth)//2)
-        whd = (int(item.height), int(item.width), int(item.depth))
-    elif item.rotation_type == 2:
-        pos = (int(item.position[0]) + int(item.height)//2, int(item.position[1]) + int(item.depth)//2, int(item.position[2]) + int(item.width)//2)
-        whd = (int(item.height), int(item.depth), int(item.width))
-    elif item.rotation_type == 3:
-        pos = (int(item.position[0]) + int(item.depth)//2, int(item.position[1]) + int(item.height)//2, int(item.position[2]) + int(item.width)//2)
-        whd = (int(item.depth), int(item.height), int(item.width))
-    elif item.rotation_type == 4:
-        pos = (int(item.position[0]) + int(item.depth)//2, int(item.position[1]) + int(item.width)//2, int(item.position[2]) + int(item.height)//2)
-        whd = (int(item.depth), int(item.width), int(item.height))
-    elif item.rotation_type == 5:
-        pos = (int(item.position[0]) + int(item.width)//2, int(item.position[1]) + int(item.depth)//2, int(item.position[2]) + int(item.height)//2)
-        whd = (int(item.width), int(item.depth), int(item.height))
-    
-    r = {
-        "partNumber": item.partno,
-        "name": item.name,
-        "type": item.typeof,
-        "color": item.color,
-        "position": pos,
-        "rotationType": item.rotation_type,
-        "WHD": whd,
-        "weight": int(item.weight)
-    }
-    return r
 
-def getBoxAndItem():
-    try:
-        packer = Packer()
-
-        # Fetch box data from the database
-        box_data = TBox.query.first()
-        if not box_data:
-            raise ValueError("No box data found in the database.")
-        
-        # Parse the WHD and openTop fields correctly
-        box_whd = list(map(int, box_data.whd.strip('[]').split(',')))
-        box_openTop = list(map(int, box_data.openTop.strip('[]').split(',')))
-        
-        box = Bin(
-            partno=box_data.name,
-            WHD=box_whd,
-            max_weight=box_data.weight,
-            corner=box_data.coner,
-            put_type=box_openTop[0]
-        )
-        packer.addBin(box)
-
-        # Fetch item data from the database
-        item_data = TItem.query.all()
-        if not item_data:
-            raise ValueError("No item data found in the database.")
-
-        color_dict = {
-            1: 'red',
-            2: 'yellow',
-            3: 'blue',
-            4: 'green',
-            5: 'purple',
-            6: 'brown',
-            7: 'orange'
-        }
-
-        for item in item_data:
-            item_whd = list(map(int, item.whd.strip('[]').split(',')))
-            for j in range(item.count):
-                packer.addItem(Item(
-                    partno=item.name + '-{}'.format(str(j+1)),
-                    name=item.name,
-                    typeof='cylinder' if item.type == 2 else 'cube',
-                    WHD=item_whd,
-                    weight=item.weight,
-                    level=1 if item.level == 1 else 2,
-                    loadbear=item.loadbear,
-                    updown=bool(item.updown),
-                    color=randColor(item.color)
-                ))
-
-        # Fetch binding data (hardcoded here, replace with actual logic if needed)
-        binding_data = ["Wood_Table", "50_Gal_Oil_Drum"]
-        binding = []
-        if binding_data:
-            for i in binding_data:
-                binding.append(tuple(i))
-        
-        return packer, box, binding
-
-    except SQLAlchemyError as e:
-        print(f"Database error occurred: {e}")
-        raise
-    except ValueError as e:
-        print(f"Data error: {e}")
-        raise
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        raise
-
-@app.route('/reset_data', methods=['POST'])
+@app.route('/reset_data', methods=['GET','POST'])
 def reset_data():
     data = {
         "box": [
             {
                 "name": "40ft High Cube Container",
-                "WHD": [1203, 235, 269],
+                "WHD": [1300, 255, 275],
                 "weight": 26280,
                 "openTop": [1, 2],
                 "coner": 15
@@ -290,7 +174,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 100,
+                "loadbear": 200,
                 "weight": 85,
                 "color": 1
             },
@@ -301,7 +185,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 100,
+                "loadbear": 200,
                 "weight": 30,
                 "color": 2
             },
@@ -312,7 +196,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 10,
+                "loadbear": 200,
                 "weight": 30,
                 "color": 3
             },
@@ -323,7 +207,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 100,
+                "loadbear": 200,
                 "weight": 20,
                 "color": 4
             },
@@ -334,7 +218,7 @@ def reset_data():
                 "updown": 0,
                 "type": 2,
                 "level": 0,
-                "loadbear": 50,
+                "loadbear": 200,
                 "weight": 170,
                 "color": 5
             },
@@ -345,7 +229,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 40,
+                "loadbear": 200,
                 "weight": 30,
                 "color": 6
             },
@@ -356,7 +240,7 @@ def reset_data():
                 "updown": 1,
                 "type": 1,
                 "level": 0,
-                "loadbear": 50,
+                "loadbear": 200,
                 "weight": 70,
                 "color": 7
             }
@@ -372,17 +256,31 @@ def reset_data():
         db.session.query(TBox).delete()
         db.session.query(TItem).delete()
         db.session.commit()
-
+        print(data["box"])
         # Insert new box data
-        box_data = data["box"][0]
-        box = TBox(
-            name=box_data["name"],
-            whd=str(box_data["WHD"]),
-            weight=box_data["weight"],
-            openTop=str(box_data["openTop"]),
-            coner=box_data["coner"]
-        )
-        db.session.add(box)
+        for box_data in data["box"]:
+            print(box_data)
+            # Check if the box data is compatible
+            if "name" not in box_data or "WHD" not in box_data or "weight" not in box_data or "openTop" not in box_data or "coner" not in box_data:
+                continue
+
+            box = TBox(
+                name=box_data["name"],
+                whd=str(box_data["WHD"]),
+                weight=box_data["weight"],
+                openTop=str(box_data["openTop"]),
+                coner=box_data["coner"]
+            )
+            db.session.add(box)
+        # box_data = data["box"][0]
+        # box = TBox(
+        #     name=box_data["name"],
+        #     whd=str(box_data["WHD"]),
+        #     weight=box_data["weight"],
+        #     openTop=str(box_data["openTop"]),
+        #     coner=box_data["coner"]
+        # )
+        # db.session.add(box)
 
         # Insert new item data
         for item_data in data["item"]:
@@ -405,65 +303,123 @@ def reset_data():
         db.session.rollback()
         return {"Success": False, "Message": str(e)}
 
+@app.route('/insert_data', methods=["GET","POST"])
+def insert_data():
+    res = {"Success": False}
+    if flask.request.method == "POST":
+        q= flask.request.get_json()
+        data = q
+        try:
+            # Clear the existing data
+            db.session.query(TBox).delete()
+            db.session.query(TItem).delete()
+            db.session.commit()
+
+            # Insert new box data
+            for box_data in data["box"]:
+                # Check if the box data is compatible
+                print(box_data)
+                box = TBox(
+                    name=box_data["name"],
+                    whd=str(box_data["WHD"]),
+                    weight=box_data["weight"],
+                    openTop=str(box_data["openTop"]),
+                    coner=box_data["coner"]
+                )
+                db.session.add(box)
+            
+            # Insert new item data
+            for item_data in data["item"]:
+                item = TItem(
+                    name=item_data["name"],
+                    whd=str(item_data["WHD"]),
+                    count=item_data.get("count", 1) if item_data else 1,
+                    # count=item_data["count"] or 1,
+                    updown=item_data["updown"],
+                    type=item_data["type"],
+                    level=item_data["level"],
+                    loadbear=item_data["loadbear"],
+                    weight=item_data["weight"],
+                    color=item_data["color"],
+                    
+                )
+                db.session.add(item)
+
+            db.session.commit()
+            return {"Success": True, "Message": "Data reset and inserted successfully"}
+        except Exception as e:
+            db.session.rollback()
+            return {"Success": False, "Message": str(e)}
+    else:
+        return render_template('insert_data.html')
+
 @app.route("/calPacking", methods=["GET","POST"])
 @cross_origin()
 def mkResultAPI():
     res = {"Success": False}
     if flask.request.method == "GET":
         try:
-            packer, box, binding = getBoxAndItem()
+            packer, box, binding = getBoxAndItem(TBox,TItem)
         except:
             res["Reason"] = "input data err"
             return res
         
         try:
-            packer.pack(bigger_first=True, distribute_items=False, fix_point=True, binding=binding, number_of_decimals=0)
-            box = packer.bins[0]
-            
-            # Make box dict
-            box_r = makeDictBox(box)
-            
-            # Make item dict
-            fitItem, unfitItem = [], []
-            for item in box.items:
-                fitItem.append(makeDictItem(item))
-            
-            for item in box.unfitted_items:
-                unfitItem.append(makeDictItem(item))
-            
-            # Make response
-            res["Success"] = True
-            res["data"] = {
-                "box": box_r,
-                "fitItem": fitItem,
-                "unfitItem": unfitItem
-            }
-            
-            # Initialize Painter
-            painter = Painter(box)
-            fig = painter.plotBoxAndItems(
-                title=box.partno,
-                alpha=0.2,
-                write_num=True,
-                fontsize=10
-            )
-            
-            # Define base directory and plot filename
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            plot_filename = f"plot_{box.partno}.html"
-            plot_filepath = os.path.join(base_dir, "static", plot_filename)
-            
-            # Ensure static directory exists
-            if not os.path.exists(os.path.join(base_dir, "static")):
-                os.makedirs(os.path.join(base_dir, "static"))
-            
-            # Save plot to HTML
-            fig.write_html(plot_filepath)
-            
-            # Provide URL to the plot
-            plot_url = flask.url_for('static', filename=plot_filename, _external=True)
-            res["plot_url"] = plot_url
-            
+            sample=[]
+            packer.pack(bigger_first=True, distribute_items=False, fix_point=True, check_stable=False,binding=binding, number_of_decimals=0)
+            for idx,box in enumerate(packer.bins) :
+                # box = packer.bins[0]
+                
+                # Make box dict
+                box_r = makeDictBox(box)
+                
+                # Make item dict
+                fitItem, unfitItem = [], []
+                for item in box.items:
+                    fitItem.append(makeDictItem(item))
+                
+                for item in box.unfitted_items:
+                    unfitItem.append(makeDictItem(item))
+                
+                # Make response
+                # print(idx)
+                res["Success"] = True
+                boxname=f"box_{idx+1}"
+                sample.append({
+                    "Success": True,
+                    boxname: box_r,
+                    "fitItem": fitItem,
+                    "unfitItem": unfitItem,
+                    "stats":Stats(packer, box)
+                })
+                
+                # Initialize Painter
+                painter = Painter(box)
+                fig = painter.plotBoxAndItems(
+                    title=box.partno,
+                    alpha=0.2,
+                    write_num=True,
+                    fontsize=10
+                )
+                
+                # Define base directory and plot filename
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                plot_filename = f"plot_{box.partno}.html"
+                plot_filepath = os.path.join(base_dir, "static", plot_filename)
+                
+                # Ensure static directory exists
+                if not os.path.exists(os.path.join(base_dir, "static")):
+                    os.makedirs(os.path.join(base_dir, "static"))
+                
+                # Save plot to HTML
+                fig.write_html(plot_filepath)
+                
+                # Provide URL to the plot
+                plot_url = flask.url_for('static', filename=plot_filename, _external=True)
+                plot_url_name = f"plot_url_{idx}"
+                
+                res[plot_url_name] = plot_url
+            res["data"]=sample
             return res
         except Exception as e:
             res['Reason'] = 'cal packing err'
@@ -478,8 +434,7 @@ def mkResultAPI():
                 return res
             try :
                 # calculate packing
-                packer.pack(bigger_first=True,distribute_items=False,fix_point=True,binding=binding,
-                number_of_decimals=0)
+                packer.pack(bigger_first=True,distribute_items=False,check_stable=False,fix_point=True,binding=binding,number_of_decimals=0)
                 box = packer.bins[0]
                 # make box dict
                 box_r = makeDictBox(box)
@@ -535,4 +490,4 @@ def mkResultAPI():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port="33",debug=True)

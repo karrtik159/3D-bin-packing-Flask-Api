@@ -12,6 +12,5 @@ debug.log
 test*
 *.dll
 /pkvenv
-
-Extras/
 /Extras
+

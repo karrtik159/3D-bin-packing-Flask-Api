@@ -1,11 +1,15 @@
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 from .constants import RotationType, Axis
-from .auxiliary_methods import intersect, set2Decimal
+from .auxiliary_methods import intersect, set2Decimal,generate_vertices
 import numpy as np
 # required to plot a representation of Bin and contained items 
 from matplotlib.patches import Rectangle,Circle
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.art3d as art3d
 from collections import Counter
+from typing import Type
 import copy
 DEFAULT_NUMBER_OF_DECIMALS = 0
 START_POSITION = [0, 0, 0]
@@ -83,6 +87,99 @@ class Item:
             dimension = []
 
         return dimension
+    def _plot(self,color,figure: Type[go.Figure] = None) -> Type[go.Figure]:
+        """Adds the plot of a box to a given figure
+
+         Parameters
+         ----------
+        figure: go.Figure
+             A plotly figure where the box should be plotted
+
+         Returns
+         -------
+         go.Figure
+        """
+        # Generate the coordinates of the vertices
+        vertices = generate_vertices(self.getDimension(), self.position).T
+        x, y, z = vertices[0, :], vertices[1, :], vertices[2, :]
+        # The arrays i, j, k contain the indices of the triangles to be plotted (two per each face of the box)
+        # The triangles have vertices (x[i[index]], y[j[index]], z[k[index]]), index = 0,1,..7.
+        i = [1, 2, 5, 6, 1, 4, 3, 6, 1, 7, 0, 6]
+        j = [0, 3, 4, 7, 0, 5, 2, 7, 3, 5, 2, 4]
+        k = [2, 1, 6, 5, 4, 1, 6, 3, 7, 1, 6, 0]
+        edge_pairs = [
+            (0, 1),
+            (0, 2),
+            (0, 4),
+            (1, 3),
+            (1, 5),
+            (2, 3),
+            (2, 6),
+            (3, 7),
+            (4, 5),
+            (4, 6),
+            (5, 7),
+            (6, 7),
+        ]
+        for (m, n) in edge_pairs:
+            vert_x = np.array([x[m], x[n]])
+            vert_y = np.array([y[m], y[n]])
+            vert_z = np.array([z[m], z[n]])
+        if figure is None:
+            # Plot the box faces
+            figure = go.Figure(
+                data=[
+                    go.Mesh3d(
+                        x=x,
+                        y=y,
+                        z=z,
+                        i=i,
+                        j=j,
+                        k=k,
+                        opacity=1,
+                        color=color,
+                        flatshading=True,
+                    )
+                ]
+            )
+            # Plot the box edges
+            figure.add_trace(
+                go.Scatter3d(
+                    x=vert_x,
+                    y=vert_y,
+                    z=vert_z,
+                    mode="lines",
+                    line=dict(color="black", width=0),
+                )
+            )
+
+        else:
+            # Plot the box faces
+            figure.add_trace(
+                go.Mesh3d(
+                    x=x,
+                    y=y,
+                    z=z,
+                    i=i,
+                    j=j,
+                    k=k,
+                    opacity=1,
+                    color=color,
+                    flatshading=True,
+                )
+            )
+            # Plot the box edges
+            figure.add_trace(
+                go.Scatter3d(
+                    x=vert_x,
+                    y=vert_y,
+                    z=vert_z,
+                    mode="lines",
+                    line=dict(color="black", width=0),
+                )
+            )
+
+        return figure
 
 
 
@@ -91,6 +188,7 @@ class Bin:
     def __init__(self, partno, WHD, max_weight,corner=0,put_type=1):
         ''' '''
         self.partno = partno
+        self.position = START_POSITION
         self.width = WHD[0]
         self.height = WHD[1]
         self.depth = WHD[2]
@@ -344,6 +442,96 @@ class Bin:
         self.fit_items = np.array([[0,self.width,0,self.height,0,0]])
         return
 
+    def _plot(self, figure: Type[go.Figure] = None) -> Type[go.Figure]:
+        """Adds the plot of a container with its boxes to a given figure
+
+        Parameters
+        ----------
+        figure: go.Figure, default = None
+            A plotly figure where the box should be plotted
+        Returns
+        -------
+            go.Figure
+        """
+        if figure is None:
+            figure = go.Figure()
+
+        # Generate all vertices and edge pairs, the numbering is explained in the function utils.generate_vertices
+        vertices = generate_vertices([self.width, self.height, self.depth], self.position).T
+        x, y, z = vertices[0, :], vertices[1, :], vertices[2, :]
+        edge_pairs = [
+            (0, 1),
+            (0, 2),
+            (0, 4),
+            (1, 3),
+            (1, 5),
+            (2, 3),
+            (2, 6),
+            (3, 7),
+            (4, 5),
+            (4, 6),
+            (5, 7),
+            (6, 7),
+        ]
+
+        # Add a line between each pair of edges to the figure
+        for (m, n) in edge_pairs:
+            vert_x = np.array([x[m], x[n]])
+            vert_y = np.array([y[m], y[n]])
+            vert_z = np.array([z[m], z[n]])
+            figure.add_trace(
+                go.Scatter3d(
+                    x=vert_x,
+                    y=vert_y,
+                    z=vert_z,
+                    mode="lines",
+                    line=dict(color="yellow", width=3),
+                )
+            )
+        color_list = px.colors.qualitative.Dark24
+
+        for idx,item in enumerate(self.items):
+            # item_color = color_list[-2]
+            item_color = color_list[(int(item.getVolume())  +int(idx)) % len(color_list)]
+            figure = item._plot(item_color, figure)
+            
+        camera = dict(
+            up=dict(x=0, y=0, z=1),
+            center=dict(x=0, y=0, z=0),
+            eye=dict(x=1.25, y=1.25, z=1.25),
+        )
+
+        # Update figure properties for improved visualization
+        figure.update_layout(
+            showlegend=False,
+            scene_camera=camera,
+            width=1200,
+            height=1200,
+            template="plotly_dark",
+        )
+        max_x = self.position[0] + self.width
+        max_y = self.position[1] + self.height
+        max_z = self.position[2] + self.depth
+        figure.update_layout(
+            scene=dict(
+                xaxis=dict(nticks=int(max_x + 2), range=[0, max_x + 5]),
+                yaxis=dict(nticks=int(max_y + 2), range=[0, max_y + 5]),
+                zaxis=dict(nticks=int(max_z + 2), range=[0, max_z + 5]),
+                aspectmode="cube",
+            ),
+            width=1200,
+            margin=dict(r=20, l=10, b=10, t=10),
+        )
+        figure.update_scenes(
+            xaxis_showgrid=False, yaxis_showgrid=False, zaxis_showgrid=False
+        )
+        figure.update_scenes(
+            xaxis_showticklabels=False,
+            yaxis_showticklabels=False,
+            zaxis_showticklabels=False,
+        )
+
+        return figure
 
 class Packer:
 
@@ -602,211 +790,3 @@ class Packer:
         #     if item in bin.unfitted_items:
         #         self.items.remove(item)
 
-
-
-# class Painter:
-
-#     def __init__(self,bins):
-#         ''' '''
-#         self.items = bins.items
-#         self.width = bins.width
-#         self.height = bins.height
-#         self.depth = bins.depth
-
-
-#     def _plotCube(self, ax, x, y, z, dx, dy, dz, color='red',mode=2,linewidth=1,text="",fontsize=15,alpha=0.5):
-#         """ Auxiliary function to plot a cube. code taken somewhere from the web.  """
-#         xx = [x, x, x+dx, x+dx, x]
-#         yy = [y, y+dy, y+dy, y, y]
-        
-#         kwargs = {'alpha': 1, 'color': color,'linewidth':linewidth }
-#         if mode == 1 :
-#             ax.plot3D(xx, yy, [z]*5, **kwargs)
-#             ax.plot3D(xx, yy, [z+dz]*5, **kwargs)
-#             ax.plot3D([x, x], [y, y], [z, z+dz], **kwargs)
-#             ax.plot3D([x, x], [y+dy, y+dy], [z, z+dz], **kwargs)
-#             ax.plot3D([x+dx, x+dx], [y+dy, y+dy], [z, z+dz], **kwargs)
-#             ax.plot3D([x+dx, x+dx], [y, y], [z, z+dz], **kwargs)
-#         else :
-#             p = Rectangle((x,y),dx,dy,fc=color,ec='black',alpha = alpha)
-#             p2 = Rectangle((x,y),dx,dy,fc=color,ec='black',alpha = alpha)
-#             p3 = Rectangle((y,z),dy,dz,fc=color,ec='black',alpha = alpha)
-#             p4 = Rectangle((y,z),dy,dz,fc=color,ec='black',alpha = alpha)
-#             p5 = Rectangle((x,z),dx,dz,fc=color,ec='black',alpha = alpha)
-#             p6 = Rectangle((x,z),dx,dz,fc=color,ec='black',alpha = alpha)
-#             ax.add_patch(p)
-#             ax.add_patch(p2)
-#             ax.add_patch(p3)
-#             ax.add_patch(p4)
-#             ax.add_patch(p5)
-#             ax.add_patch(p6)
-            
-#             if text != "":
-#                 ax.text( (x+ dx/2), (y+ dy/2), (z+ dz/2), str(text),color='black', fontsize=fontsize, ha='center', va='center')
-
-#             art3d.pathpatch_2d_to_3d(p, z=z, zdir="z")
-#             art3d.pathpatch_2d_to_3d(p2, z=z+dz, zdir="z")
-#             art3d.pathpatch_2d_to_3d(p3, z=x, zdir="x")
-#             art3d.pathpatch_2d_to_3d(p4, z=x + dx, zdir="x")
-#             art3d.pathpatch_2d_to_3d(p5, z=y, zdir="y")
-#             art3d.pathpatch_2d_to_3d(p6, z=y + dy, zdir="y")
-
-
-#     def _plotCylinder(self, ax, x, y, z, dx, dy, dz, color='red',mode=2,text="",fontsize=10,alpha=0.2):
-#         """ Auxiliary function to plot a Cylinder  """
-#         # plot the two circles above and below the cylinder
-#         p = Circle((x+dx/2,y+dy/2),radius=dx/2,color=color,alpha=0.5)
-#         p2 = Circle((x+dx/2,y+dy/2),radius=dx/2,color=color,alpha=0.5)
-#         ax.add_patch(p)
-#         ax.add_patch(p2)
-#         art3d.pathpatch_2d_to_3d(p, z=z, zdir="z")
-#         art3d.pathpatch_2d_to_3d(p2, z=z+dz, zdir="z")
-#         # plot a circle in the middle of the cylinder
-#         center_z = np.linspace(0, dz, 10)
-#         theta = np.linspace(0, 2*np.pi, 10)
-#         theta_grid, z_grid=np.meshgrid(theta, center_z)
-#         x_grid = dx / 2 * np.cos(theta_grid) + x + dx / 2
-#         y_grid = dy / 2 * np.sin(theta_grid) + y + dy / 2
-#         z_grid = z_grid + z
-#         ax.plot_surface(x_grid, y_grid, z_grid,shade=False,fc=color,alpha=alpha,color=color)
-#         if text != "" :
-#             ax.text( (x+ dx/2), (y+ dy/2), (z+ dz/2), str(text),color='black', fontsize=fontsize, ha='center', va='center')
-
-#     def plotBoxAndItems(self,title="",alpha=0.2,write_num=False,fontsize=10):
-#         """ side effective. Plot the Bin and the items it contains. """
-#         fig = plt.figure()
-#         axGlob = plt.axes(projection='3d')
-        
-#         # plot bin 
-#         self._plotCube(axGlob,0, 0, 0, float(self.width), float(self.height), float(self.depth),color='black',mode=1,linewidth=2,text="")
-
-#         counter = 0
-#         # fit rotation type
-#         for item in self.items:
-#             rt = item.rotation_type  
-#             x,y,z = item.position
-#             [w,h,d] = item.getDimension()
-#             color = item.color
-#             text= item.partno if write_num else ""
-
-#             if item.typeof == 'cube':
-#                  # plot item of cube
-#                 self._plotCube(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
-#             elif item.typeof == 'cylinder':
-#                 # plot item of cylinder
-#                 self._plotCylinder(axGlob, float(x), float(y), float(z), float(w),float(h),float(d),color=color,mode=2,text=text,fontsize=fontsize,alpha=alpha)
-            
-#             counter = counter + 1  
-
-        
-#         plt.title(title)
-#         self.setAxesEqual(axGlob)
-#         return plt
-
-
-#     def setAxesEqual(self,ax):
-#         '''Make axes of 3D plot have equal scale so that spheres appear as spheres,
-#         cubes as cubes, etc..  This is one possible solution to Matplotlib's
-#         ax.set_aspect('equal') and ax.axis('equal') not working for 3D.
-
-#         Input
-#         ax: a matplotlib axis, e.g., as output from plt.gca().'''
-#         x_limits = ax.get_xlim3d()
-#         y_limits = ax.get_ylim3d()
-#         z_limits = ax.get_zlim3d()
-
-#         x_range = abs(x_limits[1] - x_limits[0])
-#         x_middle = np.mean(x_limits)
-#         y_range = abs(y_limits[1] - y_limits[0])
-#         y_middle = np.mean(y_limits)
-#         z_range = abs(z_limits[1] - z_limits[0])
-#         z_middle = np.mean(z_limits)
-
-#         # The plot bounding box is a sphere in the sense of the infinity
-#         # norm, hence I call half the max range the plot radius.
-#         plot_radius = 0.5 * max([x_range, y_range, z_range])
-
-#         ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
-#         ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
-#         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
-import plotly.graph_objects as go
-import numpy as np
-
-class Painter:
-
-    def __init__(self, bins):
-        self.items = bins.items
-        self.width = bins.width
-        self.height = bins.height
-        self.depth = bins.depth
-
-    def _plotCube(self, fig, x, y, z, dx, dy, dz, color='red', text="", alpha=0.5):
-        """ Auxiliary function to plot a cube. """
-        vertices = [
-            [x, y, z], [x + dx, y, z], [x + dx, y + dy, z], [x, y + dy, z],
-            [x, y, z + dz], [x + dx, y, z + dz], [x + dx, y + dy, z + dz], [x, y + dy, z + dz]
-        ]
-        # Define the 12 triangles composing the cube
-        faces = [
-            [0, 1, 2], [0, 2, 3], [4, 5, 6], [4, 6, 7],
-            [0, 1, 5], [0, 5, 4], [2, 3, 7], [2, 7, 6],
-            [1, 2, 6], [1, 6, 5], [0, 3, 7], [0, 7, 4]
-        ]
-
-        x_data = [vertices[face[i]][0] for face in faces for i in range(3)]
-        y_data = [vertices[face[i]][1] for face in faces for i in range(3)]
-        z_data = [vertices[face[i]][2] for face in faces for i in range(3)]
-
-        fig.add_trace(go.Mesh3d(
-            x=x_data, y=y_data, z=z_data,
-            color=color, opacity=alpha,
-            alphahull=0, hovertext=text
-        ))
-
-    def _plotCylinder(self, fig, x, y, z, dx, dy, dz, color='red', text="", alpha=0.5):
-        """ Auxiliary function to plot a cylinder. """
-        theta = np.linspace(0, 2 * np.pi, 30)
-        x_circle = dx / 2 * np.cos(theta) + x + dx / 2
-        y_circle = dy / 2 * np.sin(theta) + y + dy / 2
-
-        z1 = np.full_like(theta, z)
-        z2 = np.full_like(theta, z + dz)
-
-        fig.add_trace(go.Scatter3d(x=x_circle, y=y_circle, z=z1, mode='lines', line=dict(color=color), opacity=alpha))
-        fig.add_trace(go.Scatter3d(x=x_circle, y=y_circle, z=z2, mode='lines', line=dict(color=color), opacity=alpha))
-
-        for i in range(len(theta)):
-            fig.add_trace(go.Scatter3d(
-                x=[x_circle[i], x_circle[i]], y=[y_circle[i], y_circle[i]], z=[z1[i], z2[i]], mode='lines',
-                line=dict(color=color), opacity=alpha
-            ))
-
-        z_grid, theta_grid = np.meshgrid(np.linspace(z, z + dz, 10), theta)
-        x_grid = dx / 2 * np.cos(theta_grid) + x + dx / 2
-        y_grid = dy / 2 * np.sin(theta_grid) + y + dy / 2
-
-        fig.add_trace(go.Surface(x=x_grid, y=y_grid, z=z_grid, colorscale=[[0, color], [1, color]], showscale=False, opacity=alpha))
-
-    def plotBoxAndItems(self, title="", alpha=0.2, write_num=False, fontsize=10):
-        """ Side effect: Plot the bin and the items it contains. """
-        fig = go.Figure()
-
-        # plot bin 
-        self._plotCube(fig, 0, 0, 0, float(self.width), float(self.height), float(self.depth), color='black', alpha=0.1)
-
-        # fit rotation type
-        for item in self.items:
-            x, y, z = item.position
-            w, h, d = item.getDimension()
-            color = item.color
-            text = item.partno if write_num else ""
-
-            if item.typeof == 'cube':
-                # plot item of cube
-                self._plotCube(fig, float(x), float(y), float(z), float(w), float(h), float(d), color=color, text=text, alpha=alpha)
-            elif item.typeof == 'cylinder':
-                # plot item of cylinder
-                self._plotCylinder(fig, float(x), float(y), float(z), float(w), float(h), float(d), color=color, text=text, alpha=alpha)
-
-        fig.update_layout(title=title, scene_aspectmode='data')
-        return fig
