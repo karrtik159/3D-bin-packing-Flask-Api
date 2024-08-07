@@ -1,16 +1,15 @@
-import plotly.express as px
-import plotly.graph_objects as go
 import numpy as np
 from .constants import RotationType, Axis
 from .auxiliary_methods import intersect, set2Decimal,generate_vertices
 import numpy as np
+
 # required to plot a representation of Bin and contained items 
-from matplotlib.patches import Rectangle,Circle
-import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d.art3d as art3d
+import plotly.express as px
+import plotly.graph_objects as go
 from collections import Counter
 from typing import Type
 import copy
+
 DEFAULT_NUMBER_OF_DECIMALS = 0
 START_POSITION = [0, 0, 0]
 
@@ -87,6 +86,7 @@ class Item:
             dimension = []
 
         return dimension
+    
     def _plot(self,color,figure: Type[go.Figure] = None) -> Type[go.Figure]:
         """Adds the plot of a box to a given figure
 
@@ -180,7 +180,6 @@ class Item:
             )
 
         return figure
-
 
 
 class Bin:
@@ -505,8 +504,8 @@ class Bin:
         figure.update_layout(
             showlegend=False,
             scene_camera=camera,
-            width=1200,
-            height=1200,
+            width=800,
+            height=800,
             template="plotly_dark",
         )
         max_x = self.position[0] + self.width
@@ -519,7 +518,7 @@ class Bin:
                 zaxis=dict(nticks=int(max_z + 2), range=[0, max_z + 5]),
                 aspectmode="cube",
             ),
-            width=1200,
+            width=800,
             margin=dict(r=20, l=10, b=10, t=10),
         )
         figure.update_scenes(
@@ -533,260 +532,424 @@ class Bin:
 
         return figure
 
+# class Packer:
+
+#     def __init__(self):
+#         ''' '''
+#         self.bins = []
+#         self.items = []
+#         self.unfit_items = []
+#         self.total_items = 0
+#         self.binding = []
+#         # self.apex = []
+
+
+#     def addBin(self, bin):
+#         ''' '''
+#         return self.bins.append(bin)
+
+
+#     def addItem(self, item):
+#         ''' '''
+#         self.total_items = len(self.items) + 1
+
+#         return self.items.append(item)
+
+
+#     def pack2Bin(self, bin, item,fix_point,check_stable,support_surface_ratio):
+#         ''' pack item to bin '''
+#         fitted = False
+#         bin.fix_point = fix_point
+#         bin.check_stable = check_stable
+#         bin.support_surface_ratio = support_surface_ratio
+
+#         # first put item on (0,0,0) , if corner exist ,first add corner in box. 
+#         if bin.corner != 0 and not bin.items:
+#             corner_lst = bin.addCorner()
+#             for i in range(len(corner_lst)) :
+#                 bin.putCorner(i,corner_lst[i])
+
+#         elif not bin.items:
+#             response = bin.putItem(item, item.position)
+
+#             if not response:
+#                 bin.unfitted_items.append(item)
+#             return
+
+#         for axis in range(0, 3):
+#             items_in_bin = bin.items
+#             for ib in items_in_bin:
+#                 pivot = [0, 0, 0]
+#                 w, h, d = ib.getDimension()
+#                 if axis == Axis.WIDTH:
+#                     pivot = [ib.position[0] + w,ib.position[1],ib.position[2]]
+#                 elif axis == Axis.HEIGHT:
+#                     pivot = [ib.position[0],ib.position[1] + h,ib.position[2]]
+#                 elif axis == Axis.DEPTH:
+#                     pivot = [ib.position[0],ib.position[1],ib.position[2] + d]
+                    
+#                 if bin.putItem(item, pivot, axis):
+#                     fitted = True
+#                     break
+#             if fitted:
+#                 break
+#         if not fitted:
+#             bin.unfitted_items.append(item)
+
+
+#     def sortBinding(self,bin):
+#         ''' sorted by binding '''
+#         b,front,back = [],[],[]
+#         for i in range(len(self.binding)):
+#             b.append([]) 
+#             for item in self.items:
+#                 if item.name in self.binding[i]:
+#                     b[i].append(item)
+#                 elif item.name not in self.binding:
+#                     if len(b[0]) == 0 and item not in front:
+#                         front.append(item)
+#                     elif item not in back and item not in front:
+#                         back.append(item)
+
+#         min_c = min([len(i) for i in b])
+        
+#         sort_bind =[]
+#         for i in range(min_c):
+#             for j in range(len(b)):
+#                 sort_bind.append(b[j][i])
+        
+#         for i in b:
+#             for j in i:
+#                 if j not in sort_bind:
+#                     self.unfit_items.append(j)
+
+#         self.items = front + sort_bind + back
+#         return
+
+
+#     def putOrder(self):
+#         '''Arrange the order of items '''
+#         r = []
+#         for i in self.bins:
+#             # open top container
+#             if i.put_type == 2:
+#                 i.items.sort(key=lambda item: item.position[0], reverse=False)
+#                 i.items.sort(key=lambda item: item.position[1], reverse=False)
+#                 i.items.sort(key=lambda item: item.position[2], reverse=False)
+#             # general container
+#             elif i.put_type == 1:
+#                 i.items.sort(key=lambda item: item.position[1], reverse=False)
+#                 i.items.sort(key=lambda item: item.position[2], reverse=False)
+#                 i.items.sort(key=lambda item: item.position[0], reverse=False)
+#             else :
+#                 pass
+#         return
+
+
+#     def gravityCenter(self,bin):
+#         ''' 
+#         Deviation Of Cargo gravity distribution
+#         ''' 
+#         w = int(bin.width)
+#         h = int(bin.height)
+#         d = int(bin.depth)
+
+#         area1 = [set(range(0,w//2+1)),set(range(0,h//2+1)),0]
+#         area2 = [set(range(w//2+1,w+1)),set(range(0,h//2+1)),0]
+#         area3 = [set(range(0,w//2+1)),set(range(h//2+1,h+1)),0]
+#         area4 = [set(range(w//2+1,w+1)),set(range(h//2+1,h+1)),0]
+#         area = [area1,area2,area3,area4]
+
+#         for i in bin.items:
+
+#             x_st = int(i.position[0])
+#             y_st = int(i.position[1])
+#             if i.rotation_type == 0:
+#                 x_ed = int(i.position[0] + i.width)
+#                 y_ed = int(i.position[1] + i.height)
+#             elif i.rotation_type == 1:
+#                 x_ed = int(i.position[0] + i.height)
+#                 y_ed = int(i.position[1] + i.width)
+#             elif i.rotation_type == 2:
+#                 x_ed = int(i.position[0] + i.height)
+#                 y_ed = int(i.position[1] + i.depth)
+#             elif i.rotation_type == 3:
+#                 x_ed = int(i.position[0] + i.depth)
+#                 y_ed = int(i.position[1] + i.height)
+#             elif i.rotation_type == 4:
+#                 x_ed = int(i.position[0] + i.depth)
+#                 y_ed = int(i.position[1] + i.width)
+#             elif i.rotation_type == 5:
+#                 x_ed = int(i.position[0] + i.width)
+#                 y_ed = int(i.position[1] + i.depth)
+
+#             x_set = set(range(x_st,int(x_ed)+1))
+#             y_set = set(range(y_st,y_ed+1))
+
+#             # cal gravity distribution
+#             for j in range(len(area)):
+#                 if x_set.issubset(area[j][0]) and y_set.issubset(area[j][1]) : 
+#                     area[j][2] += int(i.weight)
+#                     break
+#                 # include x and !include y
+#                 elif x_set.issubset(area[j][0]) == True and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0 : 
+#                     y = len(y_set & area[j][1]) / (y_ed - y_st) * int(i.weight)
+#                     area[j][2] += y
+#                     if j >= 2 :
+#                         area[j-2][2] += (int(i.weight) - x)
+#                     else :
+#                         area[j+2][2] += (int(i.weight) - y)
+#                     break
+#                 # include y and !include x
+#                 elif x_set.issubset(area[j][0]) == False and y_set.issubset(area[j][1]) == True and len(x_set & area[j][0]) != 0 : 
+#                     x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
+#                     area[j][2] += x
+#                     if j >= 2 :
+#                         area[j-2][2] += (int(i.weight) - x)
+#                     else :
+#                         area[j+2][2] += (int(i.weight) - x)
+#                     break
+#                 # !include x and !include y
+#                 elif x_set.issubset(area[j][0])== False and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0  and len(x_set & area[j][0]) != 0 :
+#                     all = (y_ed - y_st) * (x_ed - x_st)
+#                     y = len(y_set & area[0][1])
+#                     y_2 = y_ed - y_st - y
+#                     x = len(x_set & area[0][0])
+#                     x_2 = x_ed - x_st - x
+#                     area[0][2] += x * y / all * int(i.weight)
+#                     area[1][2] += x_2 * y / all * int(i.weight)
+#                     area[2][2] += x * y_2 / all * int(i.weight)
+#                     area[3][2] += x_2 * y_2 / all * int(i.weight)
+#                     break
+            
+#         r = [area[0][2],area[1][2],area[2][2],area[3][2]]
+#         result = []
+#         for i in r :
+#             result.append(round(i / sum(r) * 100,2))
+#         return result
+
+
+#     def pack(self, bigger_first=False,distribute_items=True,fix_point=True,check_stable=True,support_surface_ratio=0.75,binding=[],number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS):
+#         '''pack master func '''
+#         # set decimals
+#         for bin in self.bins:
+#             bin.formatNumbers(number_of_decimals)
+
+#         for item in self.items:
+#             item.formatNumbers(number_of_decimals)
+#         # add binding attribute
+#         self.binding = binding
+#         # Bin : sorted by volumn
+#         self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+#         # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
+#         self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+#         # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
+#         self.items.sort(key=lambda item: item.loadbear, reverse=True)
+#         self.items.sort(key=lambda item: item.level, reverse=False)
+#         # sorted by binding
+#         if binding != []:
+#             self.sortBinding(bin)
+
+#         for idx,bin in enumerate(self.bins):
+#             # pack item to bin
+#             for item in self.items:
+#                 self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
+
+#             if binding != []:
+#                 # resorted
+#                 self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+#                 self.items.sort(key=lambda item: item.loadbear, reverse=True)
+#                 self.items.sort(key=lambda item: item.level, reverse=False)
+#                 # clear bin
+#                 bin.items = []
+#                 bin.unfitted_items = self.unfit_items
+#                 bin.fit_items = np.array([[0,bin.width,0,bin.height,0,0]])
+#                 # repacking
+#                 for item in self.items:
+#                     self.pack2Bin(bin, item,fix_point,check_stable,support_surface_ratio)
+            
+#             # Deviation Of Cargo Gravity Center 
+#             self.bins[idx].gravity = self.gravityCenter(bin)
+
+#             if distribute_items :
+#                 for bitem in bin.items:
+#                     no = bitem.partno
+#                     for item in self.items :
+#                         if item.partno == no :
+#                             self.items.remove(item)
+#                             break
+
+#         # put order of items
+#         self.putOrder()
+
+#         if self.items != []:
+#             self.unfit_items = copy.deepcopy(self.items)
+#             self.items = []
+#         # for item in self.items.copy():
+#         #     if item in bin.unfitted_items:
+#         #         self.items.remove(item)
+
 class Packer:
 
     def __init__(self):
-        ''' '''
         self.bins = []
         self.items = []
         self.unfit_items = []
         self.total_items = 0
         self.binding = []
-        # self.apex = []
-
 
     def addBin(self, bin):
-        ''' '''
-        return self.bins.append(bin)
-
+        self.bins.append(bin)
 
     def addItem(self, item):
-        ''' '''
-        self.total_items = len(self.items) + 1
+        self.items.append(item)
+        self.total_items += 1
 
-        return self.items.append(item)
+    def _placeItemAtOrigin(self, bin, item):
+        response = bin.putItem(item, item.position)
+        if not response:
+            bin.unfitted_items.append(item)
+        return response
 
+    def _findPivotAndTryFit(self, bin, item):
+        for axis in range(3):
+            for ib in bin.items:
+                pivot = self._calculatePivot(ib, axis)
+                if bin.putItem(item, pivot, axis):
+                    return True
+        return False
 
-    def pack2Bin(self, bin, item,fix_point,check_stable,support_surface_ratio):
-        ''' pack item to bin '''
-        fitted = False
+    def _calculatePivot(self, item, axis):
+        pivot = [0, 0, 0]
+        w, h, d = item.getDimension()
+        if axis == Axis.WIDTH:
+            pivot[0] = item.position[0] + w
+        elif axis == Axis.HEIGHT:
+            pivot[1] = item.position[1] + h
+        elif axis == Axis.DEPTH:
+            pivot[2] = item.position[2] + d
+        return pivot
+
+    def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
         bin.fix_point = fix_point
         bin.check_stable = check_stable
         bin.support_surface_ratio = support_surface_ratio
 
-        # first put item on (0,0,0) , if corner exist ,first add corner in box. 
-        if bin.corner != 0 and not bin.items:
+        if bin.corner and not bin.items:
             corner_lst = bin.addCorner()
+            # for corner in corner_lst:
+            #     bin.putCorner(corner)
             for i in range(len(corner_lst)) :
                 bin.putCorner(i,corner_lst[i])
-
+                
         elif not bin.items:
-            response = bin.putItem(item, item.position)
+            if self._placeItemAtOrigin(bin, item):
+                return
 
-            if not response:
-                bin.unfitted_items.append(item)
-            return
-
-        for axis in range(0, 3):
-            items_in_bin = bin.items
-            for ib in items_in_bin:
-                pivot = [0, 0, 0]
-                w, h, d = ib.getDimension()
-                if axis == Axis.WIDTH:
-                    pivot = [ib.position[0] + w,ib.position[1],ib.position[2]]
-                elif axis == Axis.HEIGHT:
-                    pivot = [ib.position[0],ib.position[1] + h,ib.position[2]]
-                elif axis == Axis.DEPTH:
-                    pivot = [ib.position[0],ib.position[1],ib.position[2] + d]
-                    
-                if bin.putItem(item, pivot, axis):
-                    fitted = True
-                    break
-            if fitted:
-                break
-        if not fitted:
+        if not self._findPivotAndTryFit(bin, item):
             bin.unfitted_items.append(item)
 
+    def sortBinding(self):
+        binding_groups = {name: [] for name in self.binding}
+        unbound_items = []
 
-    def sortBinding(self,bin):
-        ''' sorted by binding '''
-        b,front,back = [],[],[]
-        for i in range(len(self.binding)):
-            b.append([]) 
-            for item in self.items:
-                if item.name in self.binding[i]:
-                    b[i].append(item)
-                elif item.name not in self.binding:
-                    if len(b[0]) == 0 and item not in front:
-                        front.append(item)
-                    elif item not in back and item not in front:
-                        back.append(item)
+        for item in self.items:
+            bound = False
+            for group in binding_groups:
+                if item.name in group:
+                    binding_groups[group].append(item)
+                    bound = True
+                    break
+            if not bound:
+                unbound_items.append(item)
 
-        min_c = min([len(i) for i in b])
-        
-        sort_bind =[]
-        for i in range(min_c):
-            for j in range(len(b)):
-                sort_bind.append(b[j][i])
-        
-        for i in b:
-            for j in i:
-                if j not in sort_bind:
-                    self.unfit_items.append(j)
+        sorted_items = []
+        for group in binding_groups.values():
+            sorted_items.extend(group)
 
-        self.items = front + sort_bind + back
-        return
-
+        self.items = unbound_items[:len(unbound_items)//2] + sorted_items + unbound_items[len(unbound_items)//2:]
 
     def putOrder(self):
-        '''Arrange the order of items '''
-        r = []
-        for i in self.bins:
-            # open top container
-            if i.put_type == 2:
-                i.items.sort(key=lambda item: item.position[0], reverse=False)
-                i.items.sort(key=lambda item: item.position[1], reverse=False)
-                i.items.sort(key=lambda item: item.position[2], reverse=False)
-            # general container
-            elif i.put_type == 1:
-                i.items.sort(key=lambda item: item.position[1], reverse=False)
-                i.items.sort(key=lambda item: item.position[2], reverse=False)
-                i.items.sort(key=lambda item: item.position[0], reverse=False)
-            else :
-                pass
-        return
+        for bin in self.bins:
+            if bin.put_type == 2:  # Open-top container
+                bin.items.sort(key=lambda item: (item.position[0], item.position[1], item.position[2]))
+            elif bin.put_type == 1:  # General container
+                bin.items.sort(key=lambda item: (item.position[1], item.position[2], item.position[0]))
 
-
-    def gravityCenter(self,bin):
-        ''' 
-        Deviation Of Cargo gravity distribution
-        ''' 
+    def gravityCenter(self, bin):
+        # Convert bin dimensions to integers
         w = int(bin.width)
         h = int(bin.height)
         d = int(bin.depth)
 
-        area1 = [set(range(0,w//2+1)),set(range(0,h//2+1)),0]
-        area2 = [set(range(w//2+1,w+1)),set(range(0,h//2+1)),0]
-        area3 = [set(range(0,w//2+1)),set(range(h//2+1,h+1)),0]
-        area4 = [set(range(w//2+1,w+1)),set(range(h//2+1,h+1)),0]
-        area = [area1,area2,area3,area4]
+        # Define areas for gravity calculation
+        areas = [
+            (range(0, w // 2 + 1), range(0, h // 2 + 1)),
+            (range(w // 2 + 1, w + 1), range(0, h // 2 + 1)),
+            (range(0, w // 2 + 1), range(h // 2 + 1, h + 1)),
+            (range(w // 2 + 1, w + 1), range(h // 2 + 1, h + 1))
+        ]
+        weights = [0, 0, 0, 0]
 
-        for i in bin.items:
+        # Calculate gravity distribution for each item
+        for item in bin.items:
+            # Convert item position and dimensions to integers
+            x_st, y_st = int(item.position[0]), int(item.position[1])
+            x_ed, y_ed = self._calculateEdges(item)
 
-            x_st = int(i.position[0])
-            y_st = int(i.position[1])
-            if i.rotation_type == 0:
-                x_ed = int(i.position[0] + i.width)
-                y_ed = int(i.position[1] + i.height)
-            elif i.rotation_type == 1:
-                x_ed = int(i.position[0] + i.height)
-                y_ed = int(i.position[1] + i.width)
-            elif i.rotation_type == 2:
-                x_ed = int(i.position[0] + i.height)
-                y_ed = int(i.position[1] + i.depth)
-            elif i.rotation_type == 3:
-                x_ed = int(i.position[0] + i.depth)
-                y_ed = int(i.position[1] + i.height)
-            elif i.rotation_type == 4:
-                x_ed = int(i.position[0] + i.depth)
-                y_ed = int(i.position[1] + i.width)
-            elif i.rotation_type == 5:
-                x_ed = int(i.position[0] + i.width)
-                y_ed = int(i.position[1] + i.depth)
+            x_set, y_set = set(range(x_st, int(x_ed) + 1)), set(range(y_st, int(y_ed) + 1))
 
-            x_set = set(range(x_st,int(x_ed)+1))
-            y_set = set(range(y_st,y_ed+1))
+            for idx, (x_range, y_range) in enumerate(areas):
+                x_overlap = len(x_set & set(x_range))
+                y_overlap = len(y_set & set(y_range))
+                if x_overlap and y_overlap:
+                    weights[idx] += x_overlap * y_overlap / ((int(x_ed) - x_st) * (int(y_ed) - y_st)) * int(item.weight)
 
-            # cal gravity distribution
-            for j in range(len(area)):
-                if x_set.issubset(area[j][0]) and y_set.issubset(area[j][1]) : 
-                    area[j][2] += int(i.weight)
-                    break
-                # include x and !include y
-                elif x_set.issubset(area[j][0]) == True and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0 : 
-                    y = len(y_set & area[j][1]) / (y_ed - y_st) * int(i.weight)
-                    area[j][2] += y
-                    if j >= 2 :
-                        area[j-2][2] += (int(i.weight) - x)
-                    else :
-                        area[j+2][2] += (int(i.weight) - y)
-                    break
-                # include y and !include x
-                elif x_set.issubset(area[j][0]) == False and y_set.issubset(area[j][1]) == True and len(x_set & area[j][0]) != 0 : 
-                    x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
-                    area[j][2] += x
-                    if j >= 2 :
-                        area[j-2][2] += (int(i.weight) - x)
-                    else :
-                        area[j+2][2] += (int(i.weight) - x)
-                    break
-                # !include x and !include y
-                elif x_set.issubset(area[j][0])== False and y_set.issubset(area[j][1]) == False and len(y_set & area[j][1]) != 0  and len(x_set & area[j][0]) != 0 :
-                    all = (y_ed - y_st) * (x_ed - x_st)
-                    y = len(y_set & area[0][1])
-                    y_2 = y_ed - y_st - y
-                    x = len(x_set & area[0][0])
-                    x_2 = x_ed - x_st - x
-                    area[0][2] += x * y / all * int(i.weight)
-                    area[1][2] += x_2 * y / all * int(i.weight)
-                    area[2][2] += x * y_2 / all * int(i.weight)
-                    area[3][2] += x_2 * y_2 / all * int(i.weight)
-                    break
-            
-        r = [area[0][2],area[1][2],area[2][2],area[3][2]]
-        result = []
-        for i in r :
-            result.append(round(i / sum(r) * 100,2))
-        return result
+        total_weight = sum(weights)
+        gravity_distribution = [round(w / total_weight * 100, 2) for w in weights]
+        return gravity_distribution
 
 
-    def pack(self, bigger_first=False,distribute_items=True,fix_point=True,check_stable=True,support_surface_ratio=0.75,binding=[],number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS):
-        '''pack master func '''
-        # set decimals
+    def _calculateEdges(self, item):
+        if item.rotation_type == 0:
+            return item.position[0] + item.width, item.position[1] + item.height
+        elif item.rotation_type == 1:
+            return item.position[0] + item.height, item.position[1] + item.width
+        elif item.rotation_type == 2:
+            return item.position[0] + item.height, item.position[1] + item.depth
+        elif item.rotation_type == 3:
+            return item.position[0] + item.depth, item.position[1] + item.height
+        elif item.rotation_type == 4:
+            return item.position[0] + item.depth, item.position[1] + item.width
+        elif item.rotation_type == 5:
+            return int(item.position[0] + item.width), int(item.position[1] + item.depth)
+
+    def pack(self, bigger_first=False, distribute_items=True, fix_point=True, check_stable=True, support_surface_ratio=0.75, binding=[], number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS):
         for bin in self.bins:
             bin.formatNumbers(number_of_decimals)
 
         for item in self.items:
             item.formatNumbers(number_of_decimals)
-        # add binding attribute
-        self.binding = binding
-        # Bin : sorted by volumn
-        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
-        # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
-        self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-        # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
-        self.items.sort(key=lambda item: item.loadbear, reverse=True)
-        self.items.sort(key=lambda item: item.level, reverse=False)
-        # sorted by binding
-        if binding != []:
-            self.sortBinding(bin)
 
-        for idx,bin in enumerate(self.bins):
-            # pack item to bin
+        self.binding = binding
+        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+        self.items.sort(key=lambda item: (item.getVolume(), item.loadbear, item.level), reverse=True)
+
+        if binding:
+            self.sortBinding()
+
+        for bin in self.bins:
             for item in self.items:
                 self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
 
-            if binding != []:
-                # resorted
-                self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-                self.items.sort(key=lambda item: item.loadbear, reverse=True)
-                self.items.sort(key=lambda item: item.level, reverse=False)
-                # clear bin
-                bin.items = []
-                bin.unfitted_items = self.unfit_items
-                bin.fit_items = np.array([[0,bin.width,0,bin.height,0,0]])
-                # repacking
-                for item in self.items:
-                    self.pack2Bin(bin, item,fix_point,check_stable,support_surface_ratio)
-            
-            # Deviation Of Cargo Gravity Center 
-            self.bins[idx].gravity = self.gravityCenter(bin)
+            bin.gravity = self.gravityCenter(bin)
 
-            if distribute_items :
-                for bitem in bin.items:
-                    no = bitem.partno
-                    for item in self.items :
-                        if item.partno == no :
-                            self.items.remove(item)
-                            break
+            if distribute_items:
+                for packed_item in bin.items:
+                    self.items = [item for item in self.items if item.partno != packed_item.partno]
 
-        # put order of items
         self.putOrder()
 
-        if self.items != []:
-            self.unfit_items = copy.deepcopy(self.items)
-            self.items = []
-        # for item in self.items.copy():
-        #     if item in bin.unfitted_items:
-        #         self.items.remove(item)
-
+        if self.items:
+            self.unfit_items.extend(self.items)
+            self.items.clear()
