@@ -1,9 +1,12 @@
+import markdown
 import flask,os,random
 from flask_cors import cross_origin
-from py3dbp import Packer, Bin, Item, Painter
+from py3dbp import Packer, Bin, Item #, Painter
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from utils import makeDictBox, makeDictItem,getBoxAndItem,Stats
+from pygments.formatters import HtmlFormatter
+
 # from models import TBox, TItem
 from forms import BoxForm, ItemForm
 
@@ -393,14 +396,8 @@ def mkResultAPI():
                     "stats":Stats(packer, box)
                 })
                 
-                # Initialize Painter
-                painter = Painter(box)
-                fig = painter.plotBoxAndItems(
-                    title=box.partno,
-                    alpha=0.2,
-                    write_num=True,
-                    fontsize=10
-                )
+                # Initialize Plot
+                fig=box._plot()
                 
                 # Define base directory and plot filename
                 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -433,8 +430,22 @@ def mkResultAPI():
                 res["Reason"] = "input data err"
                 return res
             try :
+                bigger_first = bool(request.form.get('bigger_first'))
+                distribute_items = bool(request.form.get('distribute_items'))
+                fix_point = bool(request.form.get('fix_point'))
+                check_stable = bool(request.form.get('check_stable'))
+                binding = request.form.get('binding')
+                number_of_decimals = int(request.form.get('number_of_decimals'))
                 # calculate packing
-                packer.pack(bigger_first=True,distribute_items=False,check_stable=False,fix_point=True,binding=binding,number_of_decimals=0)
+                
+                # packer.pack(bigger_first=True,distribute_items=False,check_stable=True,suport_surface_ratio=0.5,fix_point=True,binding=binding,number_of_decimals=0)
+                 # Pack using the parameters from the form
+                packer.pack(bigger_first=bigger_first,
+                            distribute_items=distribute_items,
+                            fix_point=fix_point,
+                            check_stable=check_stable,
+                            binding=binding,
+                            number_of_decimals=number_of_decimals)
                 box = packer.bins[0]
                 # make box dict
                 box_r = makeDictBox(box)
@@ -455,15 +466,9 @@ def mkResultAPI():
                     "unfitItem": unfitItem
                 }
                 # print(len(res["data"]["unfitItem"]))
-                # Initialize Painter
-                painter = Painter(box)
-                fig = painter.plotBoxAndItems(
-                    title=box.partno,
-                    alpha=0.2,
-                    write_num=True,
-                    fontsize=10
-                )
-                 # Define base directory and plot filename
+                # Initialize Plot
+                fig = box._plot()
+                # Define base directory and plot filename
                 base_dir = os.path.dirname(os.path.abspath(__file__))
                 plot_filename = f"plot_{box.partno}.html"
                 plot_filepath = os.path.join(base_dir, "static", plot_filename)
@@ -487,6 +492,15 @@ def mkResultAPI():
         else :
             res['Reason'] = 'box or item not in input data'
             return res
+
+@app.route("/details")
+def details():
+    readme_file = open("README.md", "r")
+    md_template_string = markdown.markdown(
+        readme_file.read(), extensions=["fenced_code","codehilite",'markdown.extensions.tables']
+    )
+
+    return render_template('Sample.html', readme_html=md_template_string)
 
 
 if __name__ == '__main__':

@@ -25,7 +25,7 @@ packer.addBin(box)
 
 # dyson DC34 (20.5 * 11.5 * 32.2 ,1.33kg)
 # 64 pcs per case ,  82 * 46 * 170 (85.12)
-for i in range(5): 
+for i in range(15): 
     packer.addItem(Item(
         partno='Dyson DC34 Animal{}'.format(str(i+1)),
         name='Dyson', 
@@ -40,7 +40,7 @@ for i in range(5):
 
 # washing machine (85 * 60 *60 ,10 kG)
 # 1 pcs per case, 85 * 60 *60 (10)
-for i in range(10):
+for i in range(20):
     packer.addItem(Item(
         partno='wash{}'.format(str(i+1)),
         name='wash',
@@ -48,7 +48,7 @@ for i in range(10):
         WHD=(85, 60, 60), 
         weight=10,
         level=1,
-        loadbear=100,
+        loadbear=500,
         updown=True,
         color='#FFFF37'
     ))
@@ -63,14 +63,14 @@ for i in range(5):
         WHD=(60, 80, 200), 
         weight=80,
         level=1,
-        loadbear=100,
+        loadbear=500,
         updown=True,
         color='#842B00')
     )
 
 # Server (70 * 100 * 30 , 20 kg) 
 # one per box , 70 * 100 * 30 (20)
-for i in range(10):
+for i in range(50):
     packer.addItem(Item(
         partno='Server{}'.format(str(i+1)),
         name='server',
@@ -78,7 +78,7 @@ for i in range(10):
         WHD=(70, 100, 30), 
         weight=20,
         level=1,
-        loadbear=100,
+        loadbear=500,
         updown=True,
         color='#0000E3')
     )
@@ -88,9 +88,9 @@ for i in range(10):
 packer.pack(
     bigger_first=True,
     distribute_items=False,
-    fix_point=False, # Try switching fix_point=True/False to compare the results
-    check_stable=False,
-    support_surface_ratio=0.75,
+    fix_point=True, # Try switching fix_point=True/False to compare the results
+    check_stable=True,
+    support_surface_ratio=0.6,
     number_of_decimals=0
 )
 
@@ -142,11 +142,13 @@ for box in packer.bins:
 
     # draw results
     print(box)
-    painter = Painter(box)
-    fig = painter.plotBoxAndItems(
-        title=box.partno,
-        alpha=0.2,
-        write_num=True,
-        fontsize=10
-    )
+#     painter = Painter(box)
+#     fig = painter.plotBoxAndItems(
+#         title=box.partno,
+#         alpha=0.2,
+#         write_num=True,
+#         fontsize=10
+#     )
+# fig.show()
+fig=box._plot()
 fig.show()

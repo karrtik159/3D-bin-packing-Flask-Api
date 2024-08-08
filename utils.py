@@ -1,7 +1,7 @@
 import random, os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
-from py3dbp import Packer, Bin, Item, Painter
+from py3dbp import Packer, Bin, Item#, Painter
 def randColor(s):
     ''' '''
     random.seed(s)
