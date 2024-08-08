@@ -123,30 +123,30 @@ def getBoxAndItem(TBox, TItem):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         raise
-def Stats(packer, box):
+def Stats(box):
     results = []
     
-    for box in packer.bins:
-        volume = box.width * box.height * box.depth
-        volume_t = 0
-        volume_f = 0
-        unfitted_name = ''
+    # for box in packer.bins:
+    volume = box.width * box.height * box.depth
+    volume_t = 0
+    volume_f = 0
+    unfitted_name = ''
 
-        for item in box.items:
-            volume_t += float(item.width) * float(item.height) * float(item.depth)
+    for item in box.items:
+        volume_t += float(item.width) * float(item.height) * float(item.depth)
 
-        for item in box.unfitted_items:
-            volume_f += float(item.width) * float(item.height) * float(item.depth)
-            unfitted_name += '{},'.format(item.partno)
+    for item in box.unfitted_items:
+        volume_f += float(item.width) * float(item.height) * float(item.depth)
+        unfitted_name += '{},'.format(item.partno)
 
-        box_stats = {
-            'space_utilization': round(volume_t / float(volume) * 100, 2),
-            'residual_volume': float(volume) - volume_t,
-            'unfitted_items': unfitted_name.strip(','),
-            'unfitted_volume': volume_f,
-            'gravity_distribution': box.gravity
-        }
+    box_stats = {
+        'space_utilization': round(volume_t / float(volume) * 100, 2),
+        'residual_volume': float(volume) - volume_t,
+        'unfitted_items': unfitted_name.strip(','),
+        'unfitted_volume': volume_f,
+        'gravity_distribution': box.gravity
+    }
 
-        results.append(box_stats)
+    results.append(box_stats)
 
     return results

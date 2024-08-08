@@ -13,4 +13,5 @@ test*
 *.dll
 /pkvenv
 /Extras
-
+/static
+/instance

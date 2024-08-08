@@ -12,10 +12,11 @@
     <strong>Success:</strong> false
   </div>
   {% endif %}
-
   <!-- Data Section -->
   <div class="accordion" id="dataAccordion">
     {% for box in response['data'] %}
+    <div class="my-4">
+      <h5>Box {{ loop.index }}:</h5> 
     <div class="accordion-item mb-3">
       <h2 class="accordion-header" id="heading{{ loop.index }}">
         <button
@@ -36,7 +37,9 @@
         data-bs-parent="#dataAccordion"
       >
         <div class="accordion-body">
-          {% for item in box['box_1'] %}
+          {% for key, items in box.items() %} {% if key.startswith('box_') %}
+          <!-- <h2>{{ key }}</h2> -->
+          {% for item in items %}
           <div class="mb-3">
             <h5>Item Information</h5>
             <ul class="list-group">
@@ -57,7 +60,7 @@
               </li>
             </ul>
           </div>
-          {% endfor %}
+          {% endfor %} {% endif %} {% endfor %}
         </div>
       </div>
     </div>
@@ -96,7 +99,9 @@
                     <li class="list-group-item">
                       <strong>Color:</strong>
                       {% if fit_item['color'] %}
-                      <span class="badge bg-secondary"
+                      <span
+                        class="badge"
+                        style="background-color: {{ fit_item['color'] }}; color: white;"
                         >{{ fit_item['color'] }}</span
                       >
                       {% else %}
@@ -185,9 +190,9 @@
           data-bs-toggle="collapse"
           data-bs-target="#unfitItemCollapse{{ loop.index }}"
           aria-expanded="false"
-          aria-controls="unfitItemCollapse{{ loop.index }}"
+          aria-controls="funfitItemCollapse{{ loop.index }}"
         >
-          Unfit Items
+          UnFit Items
         </button>
       </h2>
       <div
@@ -197,33 +202,68 @@
         data-bs-parent="#dataAccordion"
       >
         <div class="accordion-body">
-          {% if not box['unfitItem'] %}
-          <p class="text-muted">No unfit items.</p>
-          {% else %}
-          <ul class="list-group">
-            {% for unfit_item in box['unfitItem'] %}
-            <li class="list-group-item">{{ unfit_item }}</li>
+          <div class="row">
+            {% for UnFit in box['unfitItem'] %}
+            <div class="col-md-6 mb-3">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">{{ UnFit['name'] }}</h5>
+                  <ul class="list-group">
+                    <li class="list-group-item">
+                      <strong>WHD:</strong> {{ UnFit['WHD'] }}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Color:</strong>
+                      {% if UnFit['color'] %}
+                      <span
+                        class="badge"
+                        style="background-color: {{ UnFit['color'] }}; color: white;"
+                        >{{ UnFit['color'] }}</span
+                      >
+                      {% else %}
+                      <span class="badge bg-danger">Color not available</span>
+                      {% endif %}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Part Number:</strong> {{ UnFit['partNumber'] }}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Position:</strong> {{ UnFit['position'] }}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Rotation Type:</strong> {{ UnFit['rotationType']
+                      }}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Type:</strong> {{ UnFit['type'] }}
+                    </li>
+                    <li class="list-group-item">
+                      <strong>Weight:</strong> {{ UnFit['weight'] }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             {% endfor %}
-          </ul>
-          {% endif %}
+          </div>
         </div>
       </div>
     </div>
+
     {% endfor %}
   </div>
-
-  <!-- Plot URL -->
   <div class="my-4">
     <h5>Plot:</h5>
-    <a
-      href="{{ response['plot_url_0'] }}"
-      target="_blank"
-      class="btn btn-primary"
-    >
-      View Plot
+    
+      <!-- Plot URL -->
+      {% for box in response['data'] %} {% for key, items in box.items() %} 
+      {% if key.startswith('plot_url_') %}
+
+    <a href="{{items}}" target="_blank" class="btn btn-primary">
+      View Plot {{ key}}
     </a>
   </div>
+  {% endif %} {% endfor %} {% endfor %}
 </div>
-
 
 {% endblock %}
