@@ -301,11 +301,24 @@ def reset_data():
             db.session.add(item)
 
         db.session.commit()
-        return {"Success": True, "Message": "Data reset and inserted successfully"}
+        # return {"Success": True, "Message": "Data reset and inserted successfully"}
+        return redirect(url_for("index2"))
     except Exception as e:
         db.session.rollback()
         return {"Success": False, "Message": str(e)}
-
+    
+@app.route('/delete_data', methods=["GET"])
+def delete_data():
+    try:
+        db.session.query(TBox).delete()
+        db.session.query(TItem).delete()
+        db.session.commit()
+        # return {"Success": True, "Message": "Deleting Data successfully"}
+        return redirect(url_for("index2"))
+    except Exception as e:
+        db.session.rollback()
+        return {"Success": False, "Message": str(e)}
+    
 @app.route('/insert_data', methods=["GET","POST"])
 def insert_data():
     res = {"Success": False}
@@ -350,6 +363,7 @@ def insert_data():
 
             db.session.commit()
             return {"Success": True, "Message": "Data reset and inserted successfully"}
+            # return redirect(url_for("index2"))
         except Exception as e:
             db.session.rollback()
             return {"Success": False, "Message": str(e)}
@@ -361,15 +375,50 @@ def insert_data():
 def mkResultAPI():
     res = {"Success": False}
     if flask.request.method == "GET":
+        
+        return render_template('packing.html', boxes=TBox.query.all(), items=TItem.query.all())
+    else:
         try:
             packer, box, binding = getBoxAndItem(TBox,TItem)
-        except:
-            res["Reason"] = "input data err"
+            bigger_first = bool(request.form.get('bigger_first'))
+            distribute_items = bool(request.form.get('distribute_items'))
+            fix_point = bool(request.form.get('fix_point'))
+            check_stable = bool(request.form.get('check_stable'))
+            
+            # Handle support_surface_ratio with default value if not provided
+            support_surface_ratio_str = request.form.get('support_surface_ratio')
+            if support_surface_ratio_str:
+                try:
+                    support_surface_ratio = float(support_surface_ratio_str)
+                except ValueError:
+                    support_surface_ratio = 0.5
+            else:
+                support_surface_ratio = 0.5
+            
+            # Handle binding with default empty list if not provided
+            # binding = request.form.getlist('binding') or []
+            
+            # Convert number_of_decimals, use default if not provided or invalid
+            number_of_decimals_str = request.form.get('number_of_decimals')
+            try:
+                number_of_decimals = int(number_of_decimals_str) if number_of_decimals_str else 0
+            except ValueError:
+                number_of_decimals = 0
+        
+        except Exception as e:
+            res["Reason"] = "input data err " + (str(e) if e else "no error")
             return res
         
         try:
             sample=[]
-            packer.pack(bigger_first=True, distribute_items=False, fix_point=True, check_stable=False,binding=binding, number_of_decimals=0)
+            # Pack using the parameters from the form
+            packer.pack(bigger_first=bigger_first,
+                        distribute_items=distribute_items,
+                        fix_point=fix_point,
+                        check_stable=check_stable,
+                        support_surface_ratio=support_surface_ratio,
+                        binding=binding,
+                        number_of_decimals=number_of_decimals)
             for idx,box in enumerate(packer.bins) :
                 # box = packer.bins[0]
                 
@@ -389,7 +438,6 @@ def mkResultAPI():
                 res["Success"] = True
                 boxname=f"box_{idx+1}"
                 sample.append({
-                    "Success": True,
                     boxname: box_r,
                     "fitItem": fitItem,
                     "unfitItem": unfitItem,
@@ -417,80 +465,9 @@ def mkResultAPI():
                 
                 res[plot_url_name] = plot_url
             res["data"]=sample
-            return res
+            return render_template('result.html', response=res)
         except Exception as e:
-            res['Reason'] = 'cal packing err'
-            return res
-    else:
-        q= eval(flask.request.data.decode('utf-8'))
-        if 'box' in q.keys() and 'item' in q.keys() and 'binding' in q.keys():
-            try :
-                packer,box,binding = getBoxAndItem(q)
-            except :
-                res["Reason"] = "input data err"
-                return res
-            try :
-                bigger_first = bool(request.form.get('bigger_first'))
-                distribute_items = bool(request.form.get('distribute_items'))
-                fix_point = bool(request.form.get('fix_point'))
-                check_stable = bool(request.form.get('check_stable'))
-                binding = request.form.get('binding')
-                number_of_decimals = int(request.form.get('number_of_decimals'))
-                # calculate packing
-                
-                # packer.pack(bigger_first=True,distribute_items=False,check_stable=True,suport_surface_ratio=0.5,fix_point=True,binding=binding,number_of_decimals=0)
-                 # Pack using the parameters from the form
-                packer.pack(bigger_first=bigger_first,
-                            distribute_items=distribute_items,
-                            fix_point=fix_point,
-                            check_stable=check_stable,
-                            binding=binding,
-                            number_of_decimals=number_of_decimals)
-                box = packer.bins[0]
-                # make box dict
-                box_r = makeDictBox(box)
-                # make item dict
-                fitItem,unfitItem = [],[]
-                for item in box.items:
-                    fitItem.append(makeDictItem(item))
-                
-                for item in box.unfitted_items:
-                    unfitItem.append(makeDictItem(item))
-
-                # for unfitem in box
-                # make response
-                res["Success"] = True
-                res["data"] = {
-                    "box" : box_r,
-                    "fitItem" : fitItem,
-                    "unfitItem": unfitItem
-                }
-                # print(len(res["data"]["unfitItem"]))
-                # Initialize Plot
-                fig = box._plot()
-                # Define base directory and plot filename
-                base_dir = os.path.dirname(os.path.abspath(__file__))
-                plot_filename = f"plot_{box.partno}.html"
-                plot_filepath = os.path.join(base_dir, "static", plot_filename)
-
-                # Ensure static directory exists
-                if not os.path.exists(os.path.join(base_dir, "static")):
-                    os.makedirs(os.path.join(base_dir, "static"))
-
-                # Save plot to HTML
-                fig.write_html(plot_filepath)
-
-                # Provide URL to the plot
-                plot_url = flask.url_for('static', filename=plot_filename, _external=True)
-                res["plot_url"] = plot_url
-
-
-                return res
-            except Exception as e:
-                res['Reason'] = 'cal packing err'
-                return res
-        else :
-            res['Reason'] = 'box or item not in input data'
+            res['Reason'] = 'cal packing err ' + str(e)
             return res
 
 @app.route("/details")

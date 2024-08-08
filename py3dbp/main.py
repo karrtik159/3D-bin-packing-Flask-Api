@@ -501,6 +501,7 @@ class Bin:
                     z=vert_z,
                     mode="lines",
                     line=dict(color="yellow", width=3),
+                    showlegend=False,
                 )
             )
         color_list = px.colors.qualitative.Dark24
@@ -520,8 +521,8 @@ class Bin:
         figure.update_layout(
             showlegend=True,
             scene_camera=camera,
-            width=800,
-            height=800,
+            width=1600  ,
+            height=900,
             template="plotly_dark",
         )
         max_x = self.position[0] + self.width
@@ -540,7 +541,7 @@ class Bin:
                 # aspectmode="cube",
                 aspectratio=aspect_ratio
             ),
-            width=800,
+            width=1600,
             margin=dict(r=10, l=10, b=10, t=10),
         )
         figure.update_scenes(

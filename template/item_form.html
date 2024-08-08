@@ -1,18 +1,63 @@
-{% extends "layout.html" %}
-{% block content %}
-    <h1>Add Item</h1>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        {{ form.csrf_token }}
-        {{ form.name.label }} {{ form.name(size=32) }}<br>
-        {{ form.whd.label }} {{ form.whd(size=32) }}<br>
-        {{ form.count.label }} {{ form.count(size=32) }}<br>
-        {{ form.updown.label }} {{ form.updown(size=32) }}<br>
-        {{ form.type.label }} {{ form.type(size=32) }}<br>
-        {{ form.level.label }} {{ form.level(size=32) }}<br>
-        {{ form.loadbear.label }} {{ form.loadbear(size=32) }}<br>
-        {{ form.weight.label }} {{ form.weight(size=32) }}<br>
-        {{ form.color.label }} {{ form.color(size=32) }}<br>
-        <input type="submit" value="Add Item">
-    </form>
+{% extends "layout.html" %} {% block title %} Add item {% endblock %} {% block
+content %}
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Add Item</h1>
+  <form
+    method="POST"
+    action=""
+    class="p-4 rounded shadow-sm"
+    style="background-color: #f8f9fa"
+  >
+    {{ form.hidden_tag() }} {{ form.csrf_token }}
+
+    <div class="form-group">
+      <label for="name">{{ form.name.label }}</label>
+      {{ form.name(class="form-control", id="name", size=32) }}
+    </div>
+
+    <div class="form-group">
+      <label for="whd">{{ form.whd.label }}</label>
+      {{ form.whd(class="form-control", id="whd", size=32) }}
+    </div>
+
+    <div class="form-group">
+      <label for="count">{{ form.count.label }}</label>
+      {{ form.count(class="form-control", id="count", size=32) }}
+    </div>
+
+    <div class="form-group">
+      <label for="updown">{{ form.updown.label }}</label>
+      {{ form.updown(class="form-control", id="updown", size=2) }}
+    </div>
+
+    <div class="form-group">
+      <label for="type">{{ form.type.label }}</label>
+      {{ form.type(class="form-control", id="type", size=2) }}
+    </div>
+
+    <div class="form-group">
+      <label for="level">{{ form.level.label }}</label>
+      {{ form.level(class="form-control", id="level", size=3) }}
+    </div>
+
+    <div class="form-group">
+      <label for="loadbear">{{ form.loadbear.label }}</label>
+      {{ form.loadbear(class="form-control", id="loadbear", size=32) }}
+    </div>
+
+    <div class="form-group">
+      <label for="weight">{{ form.weight.label }}</label>
+      {{ form.weight(class="form-control", id="weight", size=32) }}
+    </div>
+
+    <div class="form-group">
+      <label for="color">{{ form.color.label }}</label>
+      {{ form.color(class="form-control", id="color", size=3) }}
+    </div>
+
+    <div class="text-center">
+      <input type="submit" class="btn btn-primary btn-lg" value="Add Item" />
+    </div>
+  </form>
+</div>
 {% endblock %}
