@@ -13,16 +13,11 @@ packer = Packer()
 
 # packer.add_bin(Bin('Auto', 130,73,62, 100))
 
-# packer.add_item(Item('Kiste', 62, 35, 38, 1, valid_rotations=RotationType.ALL, color=1))
-# packer.add_item(Item('PC-Kiste', 51,36,48, 1, valid_rotations=RotationType.FACE_UP, color=2))
-# packer.add_item(Item('Wäschekorb', 49,29,27, 1, valid_rotations=RotationType.FACE_UP, color=3))
-# packer.add_item(Item('Werkzeugbox', 39,19,18, 1, valid_rotations=RotationType.ALL, color=3))
-# packer.add_item(Item('Ikea Tüte', 40,24,18, 1, valid_rotations=RotationType.ALL, color=4))
 # Evergreen Real Container (20ft Steel Dry Cargo Container)
 # Unit cm/kg
 box = Bin(
     partno='example0',
-    WHD=( 130,73,62),
+    WHD=( 4,4,4),
     max_weight= 100,
     corner=0,
     put_type=0
@@ -32,19 +27,30 @@ packer.addBin(box)
 
 # dyson DC34 (20.5 * 11.5 * 32.2 ,1.33kg)
 # 64 pcs per case ,  82 * 46 * 170 (85.12)
-for i in range(6):
+for i in range(7):
     packer.addItem(Item(
-        partno=' {}'.format(str(i+1)),
+        partno='large {}'.format(str(i+1)),
         name='Kiste', 
         typeof='cube',
-        WHD=(62, 35, 38),
+        WHD=(2,2,2),
         weight=1,
         level=0,
         loadbear=100,
         updown=True,
         color=1)
     )
-
+for i in range(8):
+    packer.addItem(Item(
+        partno='Small {}'.format(str(i+1)),
+        name='Kiste',
+        typeof='cube',
+        WHD=(1,1,1),
+        weight=1,
+        level=0,
+        loadbear=100,
+        updown=True,
+        color=1)
+    )
 # washing machine (85 * 60 *60 ,10 kG)
 # 1 pcs per case, 85 * 60 *60 (10)
 # for i in range(1):
@@ -62,7 +68,7 @@ for i in range(6):
 
 # 42U standard cabinet (60 * 80 * 200 , 80 kg)
 # one per box, 60 * 80 * 200 (80)
-# for i in range(45):
+# for i in range(10):
 #     packer.addItem(Item(
 #         partno=' {}'.format(str(i+1)),
 #         name='Ikea Tüte ',
@@ -95,9 +101,9 @@ for i in range(6):
 packer.pack(
     bigger_first=True,
     distribute_items=False,
-    fix_point=True, # Try switching fix_point=True/False to compare the results
-    check_stable=True,
-    support_surface_ratio=0.75,
+    fix_point=False, # Try switching fix_point=True/False to compare the results
+    check_stable=False,
+    support_surface_ratio=0.6,
     number_of_decimals=0
 )
 

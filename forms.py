@@ -7,7 +7,7 @@ class BoxForm(FlaskForm):
     whd = StringField('WHD (Width, Height, Depth)', validators=[DataRequired()])
     weight = IntegerField('Weight', validators=[DataRequired(), NumberRange(min=1)])
     openTop = StringField('Open Top', validators=[DataRequired()])
-    coner = IntegerField('Coner', validators=[DataRequired()])
+    coner = IntegerField('Coner', validators=[InputRequired()])
     submit = SubmitField('Add Box')
 
 class ItemForm(FlaskForm):

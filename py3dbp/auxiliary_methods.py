@@ -4,7 +4,7 @@ import numpy as np
 from nptyping import NDArray, Int, Shape
 
 
-def rectIntersect(item1, item2, x, y):
+def     rectIntersect(item1, item2, x, y):
     d1 = item1.getDimension()
     d2 = item2.getDimension()
 
