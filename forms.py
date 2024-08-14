@@ -15,7 +15,7 @@ class ItemForm(FlaskForm):
     whd = StringField('WHD (Width, Height, Depth)', validators=[DataRequired()])
     count = IntegerField('Count', validators=[DataRequired(), NumberRange(min=1)])
     updown = SelectField('Updown', choices=[(1, 'Yes'), (0, 'No')], coerce=int)
-    type = SelectField('Type', choices=[(1, 'Type 1'), (2, 'Type 2')], coerce=int)
+    # type = SelectField('Type', choices=[(1, 'Type 1'), (2, 'Type 2')], coerce=int)
     level = IntegerField('Level', validators=[InputRequired()])
     loadbear = IntegerField('Loadbear', validators=[DataRequired(), NumberRange(min=1)])
     weight = IntegerField('Weight', validators=[DataRequired(), NumberRange(min=1)])

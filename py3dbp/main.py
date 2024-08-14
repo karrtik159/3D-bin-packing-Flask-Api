@@ -19,11 +19,11 @@ START_POSITION = [0, 0, 0]
 
 class Item:
 
-    def __init__(self, partno,name,typeof, WHD, weight, level, loadbear=9999, updown=1, color=1):
+    def __init__(self, partno,name, WHD, weight, level, loadbear=9999, updown=1, color=1):
         ''' '''
         self.partno = partno
         self.name = name
-        self.typeof = typeof
+        # self.typeof = typeof
         self.width = WHD[0]
         self.height = WHD[1]
         self.depth = WHD[2]
@@ -33,7 +33,7 @@ class Item:
         # loadbear
         self.loadbear = loadbear
         # Upside down? True or False
-        self.updown = updown if typeof == 'cube' else False
+        self.updown = True if updown == 1 else False
         self.valid_rotations= rotate = RotationType.ALL if self.updown == True else RotationType.Notupdown
         # Draw item color
         self.color = color
@@ -605,7 +605,7 @@ class Bin:
                 a = Item(
                     partno='corner{}'.format(i),
                     name='corner', 
-                    typeof='cube',
+                    # typeof='cube',
                     WHD=(corner,corner,corner), 
                     weight=0, 
                     level=0, 
@@ -757,7 +757,7 @@ class Bin:
     #         return [best_rotation]
     #
     #     return []
-    def can_hold_item_with_rotation(self, item, pivot, min_distance=0):
+    def can_hold_item_with_rotation(self, item, pivot, min_distance=5):
         """Evaluate whether one item can be placed into a bin with all optional orientations, ensuring
         it doesn't overlap with existing items, exceeds weight limits, or violates the minimum distance
         from other items.
@@ -814,7 +814,7 @@ class Bin:
 
                         # Save the calculated distance in the dictionary for tracking
                         self.distances[
-                            f'previous item: {placed_item.partno}, current item: {item.partno}, rotation type: {rotation}'] = distance
+                            f'"previous item": "{placed_item.partno}", "current item": "{item.partno}", "rotation type": "{rotation}"'] = distance
 
                         # Track the smallest distance for this rotation
                         if distance < min_distance_for_rotation:
@@ -828,26 +828,36 @@ class Bin:
                     # If the item fits within the bin, meets weight, intersection, and distance requirements
                     if fit:
                         # Calculate surface area ratios
-                        surface_area_1 = dimension[0] * dimension[1]
-                        surface_area_2 = dimension[1] * dimension[2]
-                        surface_area_3 = dimension[0] * dimension[2]
+                        longest_side = max(self.width, self.height, self.depth)
+                        
+                        if longest_side == self.width:
+                            # Logic for x (width) being the longest side
+                            surface_area_1 = dimension[0] * dimension[1]  # Assuming dimension[0] is along x and dimension[1] is along y
+                        elif longest_side == self.height:
+                            # Logic for y (height) being the longest side
+                            surface_area_1 = dimension[0] * dimension[1]   # Assuming dimension[2] is along z and dimension[0] is along x
+                        else:
+                            # Logic for z (depth) being the longest side
+                            surface_area_1 = dimension[2] * dimension[0]  # Assuming dimension[1] is along y and dimension[2] is along z
 
-                        longest_side = max(dimension)
                         surface_ratios = [
-                            surface_area_1 / longest_side,
-                            surface_area_2 / longest_side,
-                            surface_area_3 / longest_side
+                            surface_area_1 / longest_side
                         ]
 
-                        min_surface_ratio = min(surface_ratios)
+                        valid_rotations.append((rotation, min_distance_for_rotation, surface_ratios))
 
-                        valid_rotations.append((rotation, min_distance_for_rotation, min_surface_ratio))
 
+                            
         # If there are valid rotations, select the one with the best criteria
         if valid_rotations:
             # Sort by minimum distance first (in descending order) and then by surface ratio (in ascending order)
-            valid_rotations.sort(key=lambda x: (-x[1], x[2]))
+            valid_rotations.sort(key=lambda x: (-x[1],x[2]))
+            # print("Valid rotations: ",valid_rotations)
+            if valid_rotations[0] is None:
+                raise ValueError("Best rotation is None")
             best_rotation = valid_rotations[0][0]
+            if best_rotation is None:
+                raise ValueError("Best rotation is None")
             return [best_rotation]
 
         return []
@@ -909,10 +919,15 @@ class Bin:
             )
         color_list = px.colors.qualitative.Dark24
 
-        for idx,item in enumerate(self.items):
-            # item_color = color_list[-2]
-        #     item_color = color_list[(int(item.getVolume())  +int(idx)) % len(color_list)]
-            figure = item._plot(item.color, figure)
+        for idx, item in enumerate(self.items):
+            # Combine the volume and the item's name to create a unique key
+            unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
+
+            # Select a color based on the unique key
+            item_color = color_list[unique_key % len(color_list)]
+
+            # Plot the item with the selected color
+            figure = item._plot(item_color, figure)
 
         camera = dict(
             up=dict(x=0, y=0, z=1),
@@ -955,7 +970,7 @@ class Bin:
             yaxis_showticklabels=True,
             zaxis_showticklabels=True,
         )
-        print(self.distances)
+        # print(self.distances)
         return figure
 
 class Packer:

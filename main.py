@@ -35,7 +35,7 @@ class TItem(db.Model):
     whd = db.Column(db.String(100), nullable=False)
     count = db.Column(db.Integer, nullable=False)
     updown = db.Column(db.Integer, nullable=False)
-    type = db.Column(db.Integer, nullable=False)
+    # type = db.Column(db.Integer, nullable=False)
     level = db.Column(db.Integer, nullable=False)
     loadbear = db.Column(db.Integer, nullable=False)
     weight = db.Column(db.Integer, nullable=False)
@@ -84,7 +84,7 @@ def add_item():
             whd=form.whd.data,
             count=form.count.data,
             updown=form.updown.data,
-            type=form.type.data,
+            # type=form.type.data,
             level=form.level.data,
             loadbear=form.loadbear.data,
             weight=form.weight.data,
@@ -128,7 +128,7 @@ def edit_item(item_id):
         form.whd.data = item.whd
         form.count.data = item.count
         form.updown.data = item.updown
-        form.type.data = item.type
+        # form.type.data = item.type
         form.level.data = item.level
         form.loadbear.data = item.loadbear
         form.weight.data = item.weight
@@ -138,7 +138,7 @@ def edit_item(item_id):
         item.whd = form.whd.data
         item.count = form.count.data
         item.updown = form.updown.data
-        item.type = form.type.data
+        # item.type = form.type.data
         item.level = form.level.data
         item.loadbear = form.loadbear.data
         item.weight = form.weight.data
@@ -305,7 +305,7 @@ def reset_data():
                 whd=str(item_data["WHD"]),
                 count=item_data["count"],
                 updown=item_data["updown"],
-                type=item_data["type"],
+                # type=item_data["type"],
                 level=item_data["level"],
                 loadbear=item_data["loadbear"],
                 weight=item_data["weight"],
@@ -367,7 +367,7 @@ def insert_data():
                     count=item_data.get("count", 1) if item_data else 1,
                     # count=item_data["count"] or 1,
                     updown=item_data["updown"],
-                    type=item_data["type"],
+                    # type=item_data["type"],
                     level=item_data["level"],
                     loadbear=item_data["loadbear"],
                     weight=item_data["weight"],
@@ -484,12 +484,12 @@ def mkResultAPI():
                         "fitItem": fitItem,
                         "unfitItem": unfitItem,
                         "stats": Stats(box),
-                        plot_url_name: plot_url,
+                        plot_url_name: plot_filename,
                     }
                 )
 
             res["data"] = sample
-            print(type(sample))
+            # print(type(sample))
             return render_template("result.html", response=res)
         except Exception as e:
             res["Reason"] = "cal packing err " + str(e)
@@ -508,4 +508,4 @@ def details():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="33", debug=True)
+    app.run(host="0.0.0.0", port="8005", debug=True)

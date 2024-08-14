@@ -43,7 +43,7 @@ def makeDictItem(item):
     r = {
         "partNumber": item.partno,
         "name": item.name,
-        "type": item.typeof,
+        # "type": item.typeof,
         "color": item.color,
         "position": pos,
         "rotationType": item.rotation_type,
@@ -95,7 +95,7 @@ def getBoxAndItem(TBox, TItem):
                     packer.addItem(Item(
                         partno=item.name + '-{}'.format(str(j+1)),
                         name=item.name,
-                        typeof='cylinder' if item.type == 2 else 'cube',
+                        # typeof='cylinder' if item.type == 2 else 'cube',
                         WHD=item_whd,
                         weight=item.weight,
                         level=1 if item.level == 1 else 2,

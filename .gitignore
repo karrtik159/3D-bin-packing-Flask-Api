@@ -16,3 +16,4 @@ test*
 /static
 /instance
 exp_py3dbp/
+/.idea

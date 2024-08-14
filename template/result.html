@@ -118,9 +118,7 @@
                       <strong>Rotation Type:</strong> {{
                       fit_item['rotationType'] }}
                     </li>
-                    <li class="list-group-item">
-                      <strong>Type:</strong> {{ fit_item['type'] }}
-                    </li>
+                    
                     <li class="list-group-item">
                       <strong>Weight:</strong> {{ fit_item['weight'] }}
                     </li>
@@ -234,9 +232,7 @@
                       <strong>Rotation Type:</strong> {{ UnFit['rotationType']
                       }}
                     </li>
-                    <li class="list-group-item">
-                      <strong>Type:</strong> {{ UnFit['type'] }}
-                    </li>
+                    
                     <li class="list-group-item">
                       <strong>Weight:</strong> {{ UnFit['weight'] }}
                     </li>
@@ -259,7 +255,7 @@
       {% for box in response['data'] %} {% for key, items in box.items() %} 
       {% if key.startswith('plot_url_') %}
 
-    <a href="{{items}}" target="_blank" class="btn btn-primary">
+    <a href="{{ url_for('static', filename=items) }}" target="_blank" class="btn btn-primary">
       View Plot {{ key}}
     </a>
   </div>
