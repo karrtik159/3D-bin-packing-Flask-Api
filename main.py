@@ -66,7 +66,7 @@ def add_box():
             whd=form.whd.data,
             weight=form.weight.data,
             openTop=form.openTop.data,
-            coner=form.coner.data,
+            coner=form.corner.data,
         )
         db.session.add(box)
         db.session.commit()
@@ -106,13 +106,13 @@ def edit_box(box_id):
         form.whd.data = box.whd
         form.weight.data = box.weight
         form.openTop.data = box.openTop
-        form.coner.data = box.coner
+        form.corner.data = box.coner
     if form.validate_on_submit():
         box.name = form.name.data
         box.whd = form.whd.data
         box.weight = form.weight.data
         box.openTop = form.openTop.data
-        box.coner = form.coner.data
+        box.coner = form.corner.data
         db.session.commit()
         flash(f"Box {form.name.data} updated!", "success")
         return redirect(url_for("index2"))
@@ -176,7 +176,7 @@ def reset_data():
                 "WHD": [1300, 255, 275],
                 "weight": 26280,
                 "openTop": [1, 2],
-                "coner": 15,
+                "corner": 15,
             }
         ],
         "item": [
@@ -185,7 +185,6 @@ def reset_data():
                 "WHD": [170, 82, 46],
                 "count": 5,
                 "updown": 1,
-                "type": 1,
                 "level": 0,
                 "loadbear": 200,
                 "weight": 85,
@@ -196,7 +195,6 @@ def reset_data():
                 "WHD": [85, 60, 60],
                 "count": 18,
                 "updown": 1,
-                "type": 1,
                 "level": 0,
                 "loadbear": 200,
                 "weight": 30,
@@ -207,7 +205,6 @@ def reset_data():
                 "WHD": [60, 80, 200],
                 "count": 15,
                 "updown": 1,
-                "type": 1,
                 "level": 0,
                 "loadbear": 200,
                 "weight": 30,
@@ -218,40 +215,16 @@ def reset_data():
                 "WHD": [70, 100, 30],
                 "count": 30,
                 "updown": 1,
-                "type": 1,
                 "level": 0,
                 "loadbear": 200,
                 "weight": 20,
                 "color": 4,
             },
             {
-                "name": "50_Gal_Oil_Drum",
-                "WHD": [80, 80, 120],
-                "count": 20,
-                "updown": 0,
-                "type": 2,
-                "level": 0,
-                "loadbear": 200,
-                "weight": 170,
-                "color": 5,
-            },
-            {
-                "name": "Moving_Box",
-                "WHD": [60, 40, 50],
-                "count": 25,
-                "updown": 1,
-                "type": 1,
-                "level": 0,
-                "loadbear": 200,
-                "weight": 30,
-                "color": 6,
-            },
-            {
                 "name": "Wood_Table",
                 "WHD": [152, 152, 75],
                 "count": 2,
                 "updown": 1,
-                "type": 1,
                 "level": 0,
                 "loadbear": 200,
                 "weight": 70,
@@ -276,7 +249,7 @@ def reset_data():
                 or "WHD" not in box_data
                 or "weight" not in box_data
                 or "openTop" not in box_data
-                or "coner" not in box_data
+                or "corner" not in box_data
             ):
                 continue
 
@@ -285,18 +258,9 @@ def reset_data():
                 whd=str(box_data["WHD"]),
                 weight=box_data["weight"],
                 openTop=str(box_data["openTop"]),
-                coner=box_data["coner"],
+                coner=box_data["corner"],
             )
             db.session.add(box)
-        # box_data = data["box"][0]
-        # box = TBox(
-        #     name=box_data["name"],
-        #     whd=str(box_data["WHD"]),
-        #     weight=box_data["weight"],
-        #     openTop=str(box_data["openTop"]),
-        #     coner=box_data["coner"]
-        # )
-        # db.session.add(box)
 
         # Insert new item data
         for item_data in data["item"]:
@@ -355,7 +319,7 @@ def insert_data():
                     whd=str(box_data["WHD"]),
                     weight=box_data["weight"],
                     openTop=str(box_data["openTop"]),
-                    coner=box_data["coner"],
+                    coner=box_data["corner"],
                 )
                 db.session.add(box)
 
@@ -401,9 +365,12 @@ def mkResultAPI():
             distribute_items = bool(request.form.get("distribute_items"))
             fix_point = bool(request.form.get("fix_point"))
             check_stable = bool(request.form.get("check_stable"))
+            gap_on = bool(request.form.get("gap_on"))
+            gap = request.form.get("slider_Gap")
 
             # Handle support_surface_ratio with default value if not provided
-            support_surface_ratio_str = request.form.get("support_surface_ratio")
+            support_surface_ratio_str = request.form.get("slider")
+            print(support_surface_ratio_str)
             if support_surface_ratio_str:
                 try:
                     support_surface_ratio = float(support_surface_ratio_str)
@@ -439,6 +406,8 @@ def mkResultAPI():
                 support_surface_ratio=support_surface_ratio,
                 binding=binding,
                 number_of_decimals=number_of_decimals,
+                gap_on=gap_on,
+                gap=gap,
             )
             for idx, box in enumerate(packer.bins):
                 # box = packer.bins[0]
@@ -469,13 +438,8 @@ def mkResultAPI():
                 # Save plot to HTML
                 fig.write_html(plot_filepath)
 
-                # Provide URL to the plot
-                plot_url = flask.url_for(
-                    "static", filename=plot_filename, _external=True
-                )
                 plot_url_name = f"plot_url_{idx}"
                 # Make response
-                # print(idx)
                 res["Success"] = True
                 boxname = f"box_{idx+1}"
                 sample.append(

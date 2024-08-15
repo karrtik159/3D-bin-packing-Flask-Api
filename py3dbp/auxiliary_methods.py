@@ -36,7 +36,7 @@ def set2Decimal(value, number_of_decimals=0):
 
     return Decimal(value).quantize(number_of_decimals)
 def generate_vertices(
-    cuboid_len_edges: NDArray, cuboid_position: NDArray
+    cuboid_len_edges: NDArray, cuboid_position: NDArray,gap: Int
 ) -> NDArray[Shape["3, 8"], Int]:
     """Generates the vertices of a box or container in the correct format to be plotted
 
@@ -54,6 +54,8 @@ def generate_vertices(
     """
     # Generate the list of vertices by adding the lengths of the edges to the coordinates
     v0 = cuboid_position
+    for i in range(3):
+        cuboid_len_edges[i]=cuboid_len_edges[i]-set2Decimal(gap)
     v0 = np.asarray(v0, dtype=np.int32)
     v1 = v0 + np.asarray([cuboid_len_edges[0], 0, 0], dtype=np.int32)
     v2 = v0 + np.asarray([0, cuboid_len_edges[1], 0], dtype=np.int32)

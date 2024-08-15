@@ -17,3 +17,8 @@ test*
 /instance
 exp_py3dbp/
 /.idea
+/.test_utils
+4.2.0
+example0.py
+example1 copy.py
+template/plot_40ft High Cube Container.html

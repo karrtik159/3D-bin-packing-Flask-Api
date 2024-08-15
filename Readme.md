@@ -17,7 +17,7 @@
         "name": "example7-Bin1",
         "WHD": [5, 5, 5],
         "weight": 100,
-        "coner": 0,
+        "corner": 0,
         "openTop": [0]
       },
     ],
@@ -40,12 +40,12 @@
 
 | **Parameter Name** | **Type** | **Description** | **Details** |
 |:------------------:|:-------:|:---------------:|:-----------:|
-| **box**            | **Object**  | **Container Information** | **Includes name, weight, openTop, coner** |
+| **box**            | **Object**  | **Container Information** | **Includes name, weight, openTop, corner** |
 | <font color="red">**name**</font> | **String**  | **Container Name** | Unique display name for the container |
 | <font color="red">**WHD**</font>  | **Array(int)**  | **Container Dimensions** | Length, width, and height of the container |
 | <font color="red">**weight**</font> | **Integer**  | **Maximum Load Capacity of the Container** | Unit is KG |
 | **openTop**        | **Array**  | **Supported Opening Types of the Container** | 1 represents side opening, 2 represents top opening |
-| **coner**          | **int**  | **Size of the Corner Piece** | 0 represents no corner piece, starting from 1 there is a corner piece, unit is cm |
+| **corner**          | **int**  | **Size of the Corner Piece** | 0 represents no corner piece, starting from 1 there is a corner piece, unit is cm |
 | **item**           | **Object**  | **Item Information** | **Includes name, count, updown, type, level, loadbear, weight, color** |
 | <font color="red">**name**</font> | **String**  | **Item Name** | Unique display name for the item |
 | **count**          | **Integer**  | **Quantity of the Item** | Unit is pieces |
@@ -85,7 +85,7 @@ This output structure is identical to the structure required by the front end fo
 			"WHD" : [1203,235,269],
             "weight": 26280,
             "openTop": [1,2],
-            "coner":15
+            "corner":15
         }
     ],
     "item": [
@@ -124,12 +124,12 @@ This output structure is identical to the structure required by the front end fo
 
 | **Parameter Name** | **Type** | **Description** | **Details** |
 |:------------------:|:-------:|:---------------:|:-----------:|
-| **box**            | **Object**  | **Container Information** | **Includes name, weight, openTop, coner** |
+| **box**            | **Object**  | **Container Information** | **Includes name, weight, openTop, corner** |
 | **name**           | String  | Container Name | Unique display name for the container |
 | **WHD**            | Array(int)  | Container Dimensions | Length, width, and height of the container |
 | **weight**         | Integer  | Maximum Load Capacity of the Container | Unit is KG |
 | **openTop**        | Array  | Supported Opening Types of the Container | 1 represents side opening, 2 represents top opening |
-| **coner**          | int  | Size of the Corner Piece | 0 represents no corner piece, starting from 1 there is a corner piece, unit is cm |
+| **corner**          | int  | Size of the Corner Piece | 0 represents no corner piece, starting from 1 there is a corner piece, unit is cm |
 | **item**           | **Object**  | **Item Information** | **Includes name, count, updown, type, level, loadbear, weight, color** |
 | **name**           | String  | Item Name | Unique display name for the item |
 | **count**          | Integer  | Quantity of the Item | Unit is pieces |
