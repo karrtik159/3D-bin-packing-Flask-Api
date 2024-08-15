@@ -1,0 +1,81 @@
+{% extends 'layout.html' %} {% block title %}README Display{% endblock %} {%
+block content %} {% block st %}
+<style>
+  .container {
+    max-width: 900px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .markdown-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+  }
+
+  /* Customize headers for better readability */
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+    margin-top: 1.5em;
+    margin-bottom: 1em;
+    color: #0366d6;
+  }
+
+  /* Adjust the padding and margin for paragraphs and lists */
+  .markdown-body p,
+  .markdown-body ul,
+  .markdown-body ol {
+    margin-bottom: 1.5em;
+  }
+
+  /* Style code blocks for readability */
+  .markdown-body pre {
+    background-color: #f6f8fa;
+    padding: 15px;
+    border-radius: 6px;
+    overflow: auto;
+    margin-bottom: 1.5em;
+  }
+
+  .markdown-body code {
+    background-color: #f6f8fa;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  /* Improve table appearance */
+  .markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+  }
+
+  .markdown-body th,
+  .markdown-body td {
+    padding: 10px;
+    border: 1px solid #e1e4e8;
+  }
+
+  /* Enhance link appearance */
+  .markdown-body a {
+    color: #0366d6;
+    text-decoration: none;
+    border-bottom: 1px solid #0366d6;
+  }
+
+  .markdown-body a:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+<div class="container">
+  <div class="markdown-body">{{ readme_html | safe }}</div>
+</div>
+{% endblock %}

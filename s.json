@@ -1,0 +1,59 @@
+{'Success': True, 'pallets': [
+        {'palletID': 1, 'palletName': 'Pallet 1'
+        }
+    ], 'data': [
+        {'box_1': [
+                {'partNumber': '40ft High Cube Container', 'position': (650.0,
+                    127.5,
+                    137.5), 'WHD': (1300,
+                    255,
+                    275), 'weight': 26280, 'gravity': [
+                        75.65,
+                        0.0,
+                        24.35,
+                        0.0
+                    ]
+                }
+            ], 'fitItem': [
+                {'partNumber': 'Dyson_DC34_Animal-1', 'name': 'Dyson_DC34_Animal', 'color': 'red', 'position': (41,
+                    23,
+                    85), 'rotationType': 2, 'WHD': (82,
+                    46,
+                    170), 'weight': 85
+                },
+                {'partNumber': 'Dyson_DC34_Animal-2', 'name': 'Dyson_DC34_Animal', 'color': 'red', 'position': (41,
+                    69,
+                    85), 'rotationType': 2, 'WHD': (82,
+                    46,
+                    170), 'weight': 85
+                },
+                {'partNumber': 'Dyson_DC34_Animal-4', 'name': 'Dyson_DC34_Animal', 'color': 'red', 'position': (41,
+                    115,
+                    85), 'rotationType': 2, 'WHD': (82,
+                    46,
+                    170), 'weight': 85
+                },
+                {'partNumber': 'Dyson_DC34_Animal-5', 'name': 'Dyson_DC34_Animal', 'color': 'red', 'position': (41,
+                    161,
+                    85), 'rotationType': 2, 'WHD': (82,
+                    46,
+                    170), 'weight': 85
+                },
+                {'partNumber': 'Dyson_DC34_Animal-3', 'name': 'Dyson_DC34_Animal', 'color': 'red', 'position': (123,
+                    23,
+                    85), 'rotationType': 2, 'WHD': (82,
+                    46,
+                    170), 'weight': 85
+                }
+            ], 'unfitItem': [], 'stats': [
+                {'space_utilization': 3.52, 'residual_volume': 87956300.0, 'unfitted_items': '', 'unfitted_volume': 0, 'gravity_distribution': [
+                        75.65,
+                        0.0,
+                        24.35,
+                        0.0
+                    ]
+                }
+            ], 'plot_url_0': 'plot_40ft High Cube Container.html'
+        }
+    ]
+}

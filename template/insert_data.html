@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block title %}
+  Insert Data
+{% endblock title %}
+{% block
+  st %}
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='insert_style.css') }}" />
+{% endblock st %}
+{% block content %}
+  <div class="container">
+    <h1 class="mb-4">Insert Data</h1>
+    <form id="jsonForm">
+      <div class="mb-3">
+        <label for="jsonData" class="form-label">JSON Data:</label>
+        <textarea id="jsonData" name="jsonData" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <div class="response mt-4" id="response"></div>
+    <h1 class="mt-5">Sample Data</h1>
+    <div class="sample-container">
+      {% for sample_file in sample_files %}
+        <div class="sample-card" data-sample-file="{{ sample_file }}">
+          <button type="button"
+                  class="btn btn-secondary"
+                  onclick="showSampleModal('{{ sample_file }}')">View Sample</button>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- Sample Modal -->
+  <div class="modal fade"
+       id="sampleModal"
+       tabindex="-1"
+       aria-labelledby="sampleModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="sampleModalLabel">Sample Data</h5>
+          <button type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <pre id="sampleModalContent"></pre>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="copyToJsonData()">Copy to Input</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+  const sampleFiles = {{ sample_files | tojson }};
+
+  function loadSampleData(file) {
+    return fetch(`/static/jsons/${file}`)
+      .then(response => response.text())
+      .catch(error => console.error('Error loading sample data:', error));
+  }
+
+  function showSampleModal(file) {
+    loadSampleData(file).then(data => {
+      document.getElementById('sampleModalContent').textContent = data;
+      document.getElementById('sampleModal').dataset.file = file;
+      const modal = new bootstrap.Modal(document.getElementById('sampleModal'));
+      modal.show();
+    });
+  }
+
+  function copyToJsonData() {
+    const modalContent = document.getElementById('sampleModalContent').textContent;
+    document.getElementById('jsonData').value = modalContent;
+    const modal = bootstrap.Modal.getInstance(document.getElementById('sampleModal'));
+    modal.hide();
+  }
+
+  document.getElementById("jsonForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    var jsonData = document.getElementById("jsonData").value;
+    fetch("/insert_data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById("response").innerHTML =
+          "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      })
+      .catch((error) => {
+        document.getElementById("response").innerHTML =
+          '<p style="color: red;">Error: ' + error.message + "</p>";
+      });
+  });
+  </script>
+{% endblock content %}

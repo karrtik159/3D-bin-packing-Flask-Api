@@ -1,0 +1,305 @@
+{
+    "pallet": [
+        {
+            "id": "1"
+        }
+    ],
+    "box": [
+        {
+            "name": "example7-Bin1",
+            "WHD": [
+                5,
+                5,
+                5
+            ],
+            "weight": 100,
+            "corner": 0,
+            "pallet": "1",
+            "openTop": 0
+        },
+        {
+            "name": "example7-Bin2",
+            "WHD": [
+                3,
+                3,
+                5
+            ],
+            "weight": 100,
+            "corner": 0,
+            "pallet": "1",
+            "openTop": 0
+        }
+    ],
+    "item": [
+        {
+            "name": "test1",
+            "WHD": [
+                5,
+                4,
+                1
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "yellow",
+            "pallet": "1"
+        },
+        {
+            "name": "test2",
+            "WHD": [
+                1,
+                2,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test3",
+            "WHD": [
+                1,
+                2,
+                3
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test4",
+            "WHD": [
+                1,
+                2,
+                2
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test5",
+            "WHD": [
+                1,
+                2,
+                3
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test6",
+            "WHD": [
+                1,
+                2,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test7",
+            "WHD": [
+                1,
+                2,
+                2
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test8",
+            "WHD": [
+                1,
+                2,
+                3
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test9",
+            "WHD": [
+                1,
+                2,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test10",
+            "WHD": [
+                1,
+                2,
+                3
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test11",
+            "WHD": [
+                1,
+                2,
+                2
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test12",
+            "WHD": [
+                5,
+                4,
+                1
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "pink",
+            "pallet": "1"
+        },
+        {
+            "name": "test13",
+            "WHD": [
+                1,
+                1,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test14",
+            "WHD": [
+                1,
+                2,
+                1
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "pink",
+            "pallet": "1"
+        },
+        {
+            "name": "test15",
+            "WHD": [
+                1,
+                2,
+                1
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "pink",
+            "pallet": "1"
+        },
+        {
+            "name": "test16",
+            "WHD": [
+                1,
+                1,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test17",
+            "WHD": [
+                1,
+                1,
+                4
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "1"
+        },
+        {
+            "name": "test18",
+            "WHD": [
+                5,
+                4,
+                2
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "brown",
+            "pallet": "1"
+        }
+    ]
+}

@@ -1,0 +1,140 @@
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Universal margin and padding for all divs */
+div {
+    margin: 5px 0; /* Adds a vertical margin to separate each div */
+    padding: 5px;  /* Adds internal space within each div */
+}
+
+/* Navbar Styles */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: #3ba7ff !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #e0e0e0 !important;
+    transition: color 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #3ba7ff !important;
+}
+
+.dropdown-menu {
+    background-color: #343a40;
+    border: none;
+}
+
+.dropdown-menu .dropdown-item {
+    color: #e0e0e0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: #495057;
+    color: #3ba7ff;
+}
+
+/* Container Styles */
+.container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px auto; /* Override default margin for better centering */
+    padding: 25px;     /* Override default padding for more internal space */
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 8px;
+    background-color: #ff7043;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px; /* Override default padding */
+    margin: 10px 0; /* Override default margin */
+}
+
+.alert ul li {
+    list-style: none;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 5px; /* Adds a small margin around each button */
+}
+
+/* Add Button */
+.btn-add {
+    border: none;
+    padding: 10px 20px;
+    background-color: #4caf50; /* Green */
+    color: #ffffff;
+}
+
+.btn-add:hover {
+    background-color: #388e3c;
+    color: #f8f9fa;
+}
+
+/* Edit Button */
+.btn-edit {
+    padding: 5px 10px;
+    background-color: #2196f3; /* Blue */
+    color: #ffffff;
+}
+
+.btn-edit:hover {
+    background-color: #1976d2;
+    color: #f8f9fa;
+}
+
+/* Delete Button */
+.btn-delete {
+    padding: 5px 10px;
+    
+    background-color: #f44336; /* Red */
+    color: #ffffff;
+}
+
+.btn-delete:hover {
+    background-color: #d32f2f;
+    color: #f8f9fa;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container, .alert, .navbar {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.3rem;
+    }
+
+    .container {
+        padding: 20px;
+    }
+}

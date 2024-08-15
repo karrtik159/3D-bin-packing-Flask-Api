@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+{% block title %}Packer Parameters{% endblock %}
+{% block st %}<style></style>{% endblock %}
+{% block content %}
+  <div class="container mt-5">
+    <h1 class="mb-4 text-center">Packer Parameters</h1>
+    <form action="/calPacking"
+          method="POST"
+          class="p-4 rounded shadow-sm bg-light">
+      <!-- Dropdown for selecting pallet -->
+      <div class="form-group mb-4">
+        <label for="pallet_id" class="form-label">Select Pallet:</label>
+        <select class="form-control" id="pallet_id" name="pallet_id" required>
+          <option value="" disabled selected>-- Select a Pallet --</option>
+          {% for pallet in pallets %}<option value="{{ pallet.id }}">{{ pallet.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <!-- Checkbox for bigger_first -->
+      <div class="form-check mb-3">
+        <input class="form-check-input"
+               type="checkbox"
+               name="bigger_first"
+               id="bigger_first">
+        <label class="form-check-label" for="bigger_first">Boxes placed in order from big to small.</label>
+      </div>
+      <!-- Checkbox for distribute_items -->
+      <div class="form-check mb-3">
+        <input class="form-check-input"
+               type="checkbox"
+               name="distribute_items"
+               id="distribute_items">
+        <label class="form-check-label" for="distribute_items">Distribute items across boxes.</label>
+      </div>
+      <!-- Checkbox for fix_point -->
+      <div class="form-check mb-3">
+        <input class="form-check-input"
+               type="checkbox"
+               name="fix_point"
+               id="fix_point">
+        <label class="form-check-label" for="fix_point">Fix point packing.</label>
+      </div>
+      <!-- Checkbox for check_stable -->
+      <div class="form-check mb-4">
+        <input class="form-check-input"
+               type="checkbox"
+               name="check_stable"
+               id="check_stable">
+        <label class="form-check-label" for="check_stable">Check stability of the packing.</label>
+      </div>
+      <!-- Multiple select for binding -->
+      <div class="form-group mb-4">
+        <label for="binding" class="form-label">Binding:</label>
+        <select multiple class="form-control" id="binding" name="binding[]">
+          {% for item in items %}
+            <option value="{{ item.name }}" data-pallet-id="{{ item.pallet_id }}">{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Slider for support_surface_ratio -->
+      <div class="form-group mb-4">
+        <label for="slider" class="form-label">
+          Support Surface Ratio
+          <span class="badge bg-info" id="sliderValue">0.5</span>
+        </label>
+        <input type="range"
+               class="form-range"
+               id="slider"
+               name="slider"
+               min="0"
+               max="1"
+               step="0.01"
+               value="0.5"
+               oninput="updateSliderValue(this.value)">
+      </div>
+      <!-- Input for number_of_decimals -->
+      <div class="form-group mb-4">
+        <label for="number_of_decimals" class="form-label">Number of Decimals:</label>
+        <input type="number"
+               class="form-control"
+               id="number_of_decimals"
+               name="number_of_decimals"
+               value="0"
+               min="0"
+               step="1">
+      </div>
+      <!-- Checkbox for gap_on -->
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="gap_on" id="gap_on">
+        <label class="form-check-label" for="gap_on">Gap Between Boxes</label>
+      </div>
+      <!-- Slider for gap -->
+      <div class="form-group mb-4">
+        <label for="slider_Gap" class="form-label">
+          Gap Value
+          <span class="badge bg-info" id="slider_GapValue">10</span>
+        </label>
+        <input type="range"
+               class="form-range"
+               id="slider_Gap"
+               name="slider_Gap"
+               min="0"
+               max="50"
+               step="2"
+               value="10"
+               oninput="updateGapValue(this.value)">
+      </div>
+      <!-- Submit button -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+      </div>
+    </form>
+  </div>
+  <!-- JavaScript to update slider values -->
+  <script>
+  function updateSliderValue(value) {
+    document.getElementById("sliderValue").textContent = value;
+  }
+  
+  function updateGapValue(value) {
+    document.getElementById("slider_GapValue").textContent = value;
+  }
+  document.getElementById('pallet_id').addEventListener('change', function() {
+  var selectedPalletId = this.value;
+  var bindingSelect = document.getElementById('binding');
+  var options = bindingSelect.options;
+
+  for (var i = 0; i < options.length; i++) {
+    var option = options[i];
+    if (selectedPalletId === "" || option.getAttribute('data-pallet-id') === selectedPalletId) {
+      option.style.display = '';
+    } else {
+      option.style.display = 'none';
+    }
+  }
+});
+  </script>
+{% endblock %}

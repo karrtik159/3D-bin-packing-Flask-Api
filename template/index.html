@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+{% block title %} Home Page {% endblock %}
+{% block content %}
+<div class="container my-5">
+  <h1 class="text-center mb-4">Optimizing 3D Bin Packing for Maximum Space Utilization</h1>
+
+  <!-- Pallet Dropdown Section -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2>Select Container</h2>
+    </div>
+    <form method="GET" action="{{ url_for('index') }}">
+      <div class="input-group mb-3">
+        <select name="pallet_id" class="form-select" style="margin-right: 10px ;margin-top: 10  px">
+          {% for pallet in pallets %}
+          <option value="{{ pallet.id }}" {% if selected_pallet and selected_pallet.id == pallet.id %}selected{% endif %}>
+            {{ pallet.name }}
+          </option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-secondary" type="submit" style="margin-right: 10px ;margin-top: 10px">Select</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Boxes Section -->
+  {% if selected_pallet %}
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2>Boxes </h2>
+      <a href="{{ url_for('add_box', pallet_id=selected_pallet.id) }}" class="btn btn-add">Add Box</a>
+    </div>
+    <ul class="list-group mt-3">
+      {% for box in selected_pallet.containers %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ box.name }} - {{ box.whd }} - {{ box.weight }}kg</span>
+        <span>
+          <a href="{{ url_for('edit_box', box_id=box.id) }}" class="btn btn-sm btn-edit me-2">Edit</a>
+          <form action="{{ url_for('delete_box', box_id=box.id) }}" method="POST" style="display: inline" onsubmit="return confirm('Are you sure you want to delete this box?');">
+            <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+          </form>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Items Section -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2>Items </h2>
+      <a href="{{ url_for('add_item', pallet_id=selected_pallet.id) }}" class="btn btn-add">Add Item</a>
+    </div>
+    <ul class="list-group mt-3">
+      {% for item in selected_pallet.items %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ item.name }} - {{ item.whd }} - {{ item.count }} pieces</span>
+        <span>
+          <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-edit me-2">Edit</a>
+          <form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST" style="display: inline" onsubmit="return confirm('Are you sure you want to delete this item?');">
+            <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+          </form>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <p class="text-center">Please select a pallet to view its boxes and items.</p>
+  {% endif %}
+</div>
+
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Manage Pallets</h1>
+
+  <!-- Button to trigger the create pallet modal -->
+  <div class="text-center mb-4">
+    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createPalletModal">
+      Create Pallet
+    </button>
+  </div>
+
+  <!-- Create Pallet Modal -->
+  <div class="modal fade" id="createPalletModal" tabindex="-1" aria-labelledby="createPalletModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="{{ url_for('create_pallet') }}" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createPalletModalLabel">Create New Pallet</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="pallet_name" class="form-label">Pallet Name</label>
+              <input type="text" class="form-control" id="pallet_name" name="pallet_name" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Create Pallet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- List of existing pallets with delete functionality -->
+  <div class="mt-5">
+    <h2 class="mb-4 text-center">Existing Pallets</h2>
+    <ul class="list-group">
+      {% for pallet in pallets %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ pallet.name }}
+        <form action="{{ url_for('delete_pallet', pallet_id=pallet.id) }}" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this pallet?');">Delete</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% block content2 %} {% endblock %}
+{% endblock %}

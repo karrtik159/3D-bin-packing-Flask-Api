@@ -1,0 +1,53 @@
+{
+    "pallet": [
+        {
+            "id": "1"
+        }
+    ],
+    "box": [
+        {
+            "name": "example0",
+            "WHD": [
+                4,
+                4,
+                4
+            ],
+            "weight": 100,
+            "corner": 0,
+            "pallet": "1",
+            "openTop": 0
+        }
+    ],
+    "item": [
+        {
+            "name": "Kiste",
+            "WHD": [
+                2,
+                2,
+                2
+            ],
+            "count": 7,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": 1,
+            "pallet": "1"
+        },
+        {
+            "name": "Kiste",
+            "WHD": [
+                1,
+                1,
+                1
+            ],
+            "count": 8,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": 1,
+            "pallet": "1"
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+{% extends "index.html" %}
+
+{% block content2 %}
+<div class="container mt-5">
+  <h1 class="mb-4 text-center">Manage Pallets</h1>
+  
+  <!-- Button to trigger the create pallet modal -->
+  <div class="text-center mb-4">
+    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#createPalletModal">
+      Create Pallet
+    </button>
+  </div>
+
+  <!-- Create Pallet Modal -->
+  <div class="modal fade" id="createPalletModal" tabindex="-1" aria-labelledby="createPalletModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="{{ url_for('create_pallet') }}" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createPalletModalLabel">Create New Pallet</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="pallet_name" class="form-label">Pallet Name</label>
+              <input type="text" class="form-control" id="pallet_name" name="pallet_name" required>
+            </div>
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Create Pallet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
