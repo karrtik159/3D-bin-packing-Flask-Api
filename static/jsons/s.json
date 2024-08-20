@@ -41,12 +41,12 @@
                 15,
                 12
             ],
-            "count": 45,
+            "count": 5,
             "updown": 1,
             "level": 0,
             "loadbear": 100,
             "weight": 1,
-            "color": "#842B00",
+            "color": 3,
             "pallet": "1"
         },
         {
@@ -56,12 +56,12 @@
                 100,
                 30
             ],
-            "count": 50,
+            "count": 5,
             "updown": 1,
             "level": 1,
             "loadbear": 500,
             "weight": 20,
-            "color": "#0000E3",
+            "color": 2,
             "pallet": "1"
         }
     ]

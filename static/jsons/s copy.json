@@ -20,7 +20,7 @@
     ],
     "item": [
         {
-            "name": "Kiste",
+            "name": "Kiste 2*2*2",
             "WHD": [
                 2,
                 2,
@@ -35,7 +35,7 @@
             "pallet": "1"
         },
         {
-            "name": "Kiste",
+            "name": "Kiste 1*1*1",
             "WHD": [
                 1,
                 1,

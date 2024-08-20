@@ -501,7 +501,9 @@ def mkResultAPI():
 
             support_surface_ratio_str = request.form.get("slider")
             support_surface_ratio = (
-                float(support_surface_ratio_str) if support_surface_ratio_str else 0.5
+                float(support_surface_ratio_str)
+                if support_surface_ratio_str
+                else float(0.75)
             )
 
             number_of_decimals_str = request.form.get("number_of_decimals")
@@ -513,6 +515,7 @@ def mkResultAPI():
             if len(selected_boxes) > 1:
                 # Number of elements is greater than 1
                 distribute_items = True
+                print("distribute_items = ", distribute_items)
 
         except Exception as e:
             res["Reason"] = "input data err " + (str(e) if e else "no error")

@@ -139,7 +139,7 @@ def getBoxAndItem(selected_boxes, selected_items):
                     name=item_data.name,
                     WHD=(item_width, item_height, item_depth),
                     weight=item_data.weight,
-                    level=1 if item_data.level == 1 else 2,
+                    level=int(item_data.level),
                     loadbear=item_data.loadbear,
                     updown=bool(item_data.updown),
                     color=color_dict.get(

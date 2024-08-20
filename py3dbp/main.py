@@ -398,7 +398,7 @@ class Bin:
 
     #     return fit
 
-    def putItem(self, item, pivot, distance_3d):
+    def putItem_old(self, item, pivot, distance_3d):
         """Evaluate whether an item can be placed into a certain bin with which orientation. If yes, perform put action.
         Args:
             item: any item in item list.
@@ -590,6 +590,138 @@ class Bin:
 
             item.position = valid_item_position
             return fit
+
+    def putItem(self, item, pivot, distance_3d):
+        """Evaluate whether an item can be placed into a certain bin with which orientation. If yes, perform put action.
+        Args:
+            item: any item in item list.
+            pivot: an (x, y, z) coordinate, the back-lower-left corner of the item will be placed at the pivot.
+            distance_3d: a 3D parameter to determine which orientation should be chosen.
+        Returns:
+            Boolean variable: False when an item couldn't be placed into the bin; True when an item could be placed and perform put action.
+        """
+        # Initialize base variables
+        fit = False
+        valid_item_position = item.position
+        item.position = pivot
+        rotation_type_list = self.can_hold_item_with_rotation(item, pivot)
+
+        if not rotation_type_list:
+            item.position = valid_item_position
+            return False
+
+        best_fit = None
+        min_margin_sum = float("inf")
+
+        for rotation in rotation_type_list:
+            item.rotation_type = rotation
+            dimension = item.getDimension()
+
+            # Condition 1: Check if the item exceeds bin boundaries
+            if (
+                pivot[0] + dimension[0] > self.width
+                or pivot[1] + dimension[1] > self.height
+                or pivot[2] + dimension[2] > self.depth
+            ):
+                continue  # Skip to the next rotation if boundaries are exceeded
+
+            fit = True
+
+            # Condition 2: Check for intersections with other items
+            for current_item_in_bin in self.items:
+                if intersect(current_item_in_bin, item):
+                    fit = False
+                    break  # Exit the loop if an intersection is found
+
+            if not fit:
+                continue  # Skip to the next rotation if there is an intersection
+
+            # Condition 3: Check if adding this item exceeds the bin's maximum weight
+            if self.getTotalWeight() + item.weight > self.max_weight:
+                fit = False
+                continue  # Skip to the next rotation if weight exceeds the limit
+
+            # Condition 4: Handle point fixing and stability if required
+            if self.fix_point:
+                [w, h, d] = dimension
+                [x, y, z] = map(float, pivot)
+
+                y = self.checkHeight(
+                    [x, x + float(w), y, y + float(h), z, z + float(d)]
+                )
+                x = self.checkWidth([x, x + float(w), y, y + float(h), z, z + float(d)])
+                z = self.checkDepth([x, x + float(w), y, y + float(h), z, z + float(d)])
+
+                # Stability Check
+                if self.check_stable:
+                    item_area_lower = (w - self.gap) * (h - self.gap)
+                    support_area_upper = 0
+
+                    for i in self.fit_items:
+                        if z == i[5]:
+                            area = len(
+                                set([j for j in range(int(x), int(x + int(w)))])
+                                & set([j for j in range(int(i[0]), int(i[1]))])
+                            ) * len(
+                                set([j for j in range(int(y), int(y + int(h)))])
+                                & set([j for j in range(int(i[2]), int(i[3]))])
+                            )
+                            support_area_upper += area
+
+                    # Verify support surface ratio
+                    if (
+                        support_area_upper / item_area_lower
+                        < self.support_surface_ratio
+                    ):
+                        four_vertices = [
+                            [x, y],
+                            [x + float(w), y],
+                            [x, y + float(h)],
+                            [x + float(w), y + float(h)],
+                        ]
+                        supported = [False] * 4
+                        for i in self.fit_items:
+                            if z == i[5]:
+                                for idx, vertex in enumerate(four_vertices):
+                                    if (i[0] <= vertex[0] <= i[1]) and (
+                                        i[2] <= vertex[1] <= i[3]
+                                    ):
+                                        supported[idx] = True
+                        if not all(supported):
+                            fit = False
+                            continue  # Skip to the next rotation if stability check fails
+
+                # Append the item position after fixing points
+                self.fit_items = np.append(
+                    self.fit_items,
+                    [[x, x + float(w), y, y + float(h), z, z + float(d)]],
+                    axis=0,
+                )
+                item.position = [set2Decimal(x), set2Decimal(y), set2Decimal(z)]
+
+            # If the current rotation fits, calculate the margins
+            if fit:
+                margins_3d = [
+                    distance_3d[0] - dimension[0],
+                    distance_3d[1] - dimension[1],
+                    distance_3d[2] - dimension[2],
+                ]
+                margin_sum = sum(margins_3d)
+
+                if margin_sum < min_margin_sum:
+                    min_margin_sum = margin_sum
+                    best_fit = rotation
+
+        # Final decision: If a suitable rotation was found, place the item
+        if best_fit is not None:
+            item.rotation_type = best_fit
+            self.items.append(item)
+            self.total_items += 1
+            return True
+
+        # Reset position if no suitable rotation was found
+        item.position = valid_item_position
+        return False
 
     def checkDepth(self, unfix_point):
         """fix item position z"""
@@ -831,7 +963,7 @@ class Bin:
     #         return [best_rotation]
     #
     #     return []
-    def can_hold_item_with_rotation(self, item, pivot, min_distance=5):
+    def can_hold_item_with_rotation(self, item, pivot):
         """Evaluate whether one item can be placed into a bin with all optional orientations, ensuring
         it doesn't overlap with existing items, exceeds weight limits, or violates the minimum distance
         from other items.
@@ -867,7 +999,19 @@ class Bin:
 
                 # Check for intersection with other items in the bin
                 for current_item_in_bin in self.items:
-                    if intersect(current_item_in_bin, item):
+                    current_item_dim = current_item_in_bin.getDimension()
+
+                    # Check for overlap in each dimension
+                    if (
+                        pivot[0] < current_item_in_bin.position[0] + current_item_dim[0]
+                        and pivot[0] + dimension[0] > current_item_in_bin.position[0]
+                        and pivot[1]
+                        < current_item_in_bin.position[1] + current_item_dim[1]
+                        and pivot[1] + dimension[1] > current_item_in_bin.position[1]
+                        and pivot[2]
+                        < current_item_in_bin.position[2] + current_item_dim[2]
+                        and pivot[2] + dimension[2] > current_item_in_bin.position[2]
+                    ):
                         fit = False
                         break
 
@@ -882,9 +1026,18 @@ class Bin:
                         placed_item_dim = placed_item.getDimension()
 
                         # Calculate the distance between the pivot points of the two items
-                        dx = pivot[0] - placed_item.position[0]
-                        dy = pivot[1] - placed_item.position[1]
-                        dz = pivot[2] - placed_item.position[2]
+                        dx = max(pivot[0], placed_item.position[0]) - min(
+                            pivot[0] + dimension[0],
+                            placed_item.position[0] + placed_item_dim[0],
+                        )
+                        dy = max(pivot[1], placed_item.position[1]) - min(
+                            pivot[1] + dimension[1],
+                            placed_item.position[1] + placed_item_dim[1],
+                        )
+                        dz = max(pivot[2], placed_item.position[2]) - min(
+                            pivot[2] + dimension[2],
+                            placed_item.position[2] + placed_item_dim[2],
+                        )
 
                         distance = sqrt(dx**2 + dy**2 + dz**2)
 
@@ -898,9 +1051,9 @@ class Bin:
                             min_distance_for_rotation = distance
 
                         # If the distance is less than the minimum required, invalidate this rotation
-                        if distance < min_distance:
-                            fit = False
-                            break
+                        # if distance < min_distance:
+                        #     fit = False
+                        #     break
 
                     # If the item fits within the bin, meets weight, intersection, and distance requirements
                     if fit:
@@ -908,22 +1061,19 @@ class Bin:
                         longest_side = max(self.width, self.height, self.depth)
 
                         if longest_side == self.width:
-                            # Logic for x (width) being the longest side
                             surface_area_1 = (
                                 dimension[0] * dimension[1]
-                            )  # Assuming dimension[0] is along x and dimension[1] is along y
+                            )  # Surface area on y-z plane
                         elif longest_side == self.height:
-                            # Logic for y (height) being the longest side
                             surface_area_1 = (
                                 dimension[0] * dimension[1]
-                            )  # Assuming dimension[2] is along z and dimension[0] is along x
+                            )  # Surface area on x-z plane
                         else:
-                            # Logic for z (depth) being the longest side
                             surface_area_1 = (
                                 dimension[2] * dimension[0]
-                            )  # Assuming dimension[1] is along y and dimension[2] is along z
+                            )  # Surface area on x-y plane
 
-                        surface_ratios = [surface_area_1 / longest_side]
+                        surface_ratios = surface_area_1 / longest_side
 
                         valid_rotations.append(
                             (rotation, min_distance_for_rotation, surface_ratios)
@@ -932,14 +1082,146 @@ class Bin:
         # If there are valid rotations, select the one with the best criteria
         if valid_rotations:
             # Sort by minimum distance first (in descending order) and then by surface ratio (in ascending order)
-            valid_rotations.sort(key=lambda x: (-x[1], x[2]))
-            # print("Valid rotations: ",valid_rotations)
-            if valid_rotations[0] is None:
-                raise ValueError("Best rotation is None")
-            best_rotation = valid_rotations[0][0]
-            if best_rotation is None:
-                raise ValueError("Best rotation is None")
-            return [best_rotation]
+            # valid_rotations.sort(key=lambda x: (x[2]))
+            valid_rotations.sort(key=lambda x: (x[2]))
+            return [valid_rotations[0][0]]
+
+        return []
+
+    def can_hold_item_with_rotation(self, item, pivot):
+        """Evaluate whether one item can be placed into a bin with all optional orientations.
+
+        Args:
+            item: The item to be placed in the bin.
+            pivot: An (x, y, z) coordinate where the back-lower-left corner of the item will be placed.
+
+        Returns:
+            A list containing the best rotation type based on a balance of minimal surface area ratio
+            and valid fitting. If none are valid, returns an empty list.
+        """
+
+        item.position = pivot
+        valid_rotations = []
+
+        for rotation in item.valid_rotations:
+            item.rotation_type = rotation
+            dimension = item.getDimension()
+
+            # Check if the item fits within the bin's boundaries
+            if (
+                pivot[0] + dimension[0] <= self.width
+                and pivot[1] + dimension[1] <= self.height
+                and pivot[2] + dimension[2] <= self.depth
+            ):
+
+                fit = True
+
+                # Check for intersection with other items in the bin
+                for current_item_in_bin in self.items:
+                    current_item_dim = current_item_in_bin.getDimension()
+
+                    # Check for overlap in each dimension
+                    if (
+                        pivot[0] < current_item_in_bin.position[0] + current_item_dim[0]
+                        and pivot[0] + dimension[0] > current_item_in_bin.position[0]
+                        and pivot[1]
+                        < current_item_in_bin.position[1] + current_item_dim[1]
+                        and pivot[1] + dimension[1] > current_item_in_bin.position[1]
+                        and pivot[2]
+                        < current_item_in_bin.position[2] + current_item_dim[2]
+                        and pivot[2] + dimension[2] > current_item_in_bin.position[2]
+                    ):
+                        fit = False
+                        break
+
+                # Check weight capacity
+                if fit and (self.getTotalWeight() + item.weight <= self.max_weight):
+                    # Calculate surface area ratios based on a heuristic
+                    surface_area = (
+                        dimension[0] * dimension[1]
+                    )  # This is arbitrary; customize as needed
+                    valid_rotations.append((rotation, surface_area))
+
+        if valid_rotations:
+            # Sort rotations by surface area (ascending)
+            valid_rotations.sort(key=lambda x: x[1])
+            return [valid_rotations[0][0]]
+
+        return []
+
+    def can_hold_item_with_rotation(self, item, pivot):
+        """Evaluate whether one item can be placed into a bin with all optional orientations,
+        preferring positions closer to the last placed item.
+
+        Args:
+            item: The item to be placed in the bin.
+            pivot: An (x, y, z) coordinate where the back-lower-left corner of the item will be placed.
+
+        Returns:
+            A list containing the best rotation type based on proximity to the last placed item
+            and the surface area ratio. If none are valid, returns an empty list.
+        """
+
+        item.position = pivot
+        valid_rotations = []
+        last_item = self.items[-1] if self.items else None  # Get the last placed item
+
+        for rotation in item.valid_rotations:
+            item.rotation_type = rotation
+            dimension = item.getDimension()
+
+            # Check if the item fits within the bin's boundaries
+            if (
+                pivot[0] + dimension[0] <= self.width
+                and pivot[1] + dimension[1] <= self.height
+                and pivot[2] + dimension[2] <= self.depth
+            ):
+
+                fit = True
+
+                # Check for intersection with other items in the bin
+                for current_item_in_bin in self.items:
+                    current_item_dim = current_item_in_bin.getDimension()
+
+                    # Check for overlap in each dimension
+                    if (
+                        pivot[0] < current_item_in_bin.position[0] + current_item_dim[0]
+                        and pivot[0] + dimension[0] > current_item_in_bin.position[0]
+                        and pivot[1]
+                        < current_item_in_bin.position[1] + current_item_dim[1]
+                        and pivot[1] + dimension[1] > current_item_in_bin.position[1]
+                        and pivot[2]
+                        < current_item_in_bin.position[2] + current_item_dim[2]
+                        and pivot[2] + dimension[2] > current_item_in_bin.position[2]
+                    ):
+                        fit = False
+                        break
+
+                # Check weight capacity
+                if fit and (self.getTotalWeight() + item.weight <= self.max_weight):
+                    # Calculate surface area ratios
+                    surface_area = dimension[0] * dimension[1]  # Customize as needed
+
+                    # Calculate the distance to the last placed item, if any
+                    if last_item:
+                        dx = abs(pivot[0] - last_item.position[0])
+                        dy = abs(pivot[1] - last_item.position[1])
+                        dz = abs(pivot[2] - last_item.position[2])
+                        distance_to_last_item = dx + dy + dz
+                    else:
+                        distance_to_last_item = (
+                            0  # If there's no last item, distance is 0
+                        )
+
+                    # Store the rotation along with surface area and proximity to the last item
+                    valid_rotations.append(
+                        (rotation, surface_area, distance_to_last_item)
+                    )
+
+        if valid_rotations:
+            # Sort by distance to last item first (ascending) and then by surface area (ascending)
+            valid_rotations.sort(key=lambda x: (x[2], x[1]))
+            return [valid_rotations[0][0]]
 
         return []
 
