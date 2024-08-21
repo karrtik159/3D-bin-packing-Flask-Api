@@ -1,0 +1,83 @@
+{
+    "pallet": [
+        {
+            "id": "6"
+        }
+    ],
+    "box": [
+        {
+            "name": "example5",
+            "WHD": [
+                589.8,
+                243.8,
+                259.1
+            ],
+            "weight": 28080,
+            "corner": 15,
+            "pallet": "6",
+            "openTop": 0
+        }
+    ],
+    "item": [
+        {
+            "name": "Dyson DC34 Animal",
+            "WHD": [
+                170,
+                82,
+                46
+            ],
+            "count": 15,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 85.12,
+            "color": 1,
+            "pallet": "6"
+        },
+        {
+            "name": "wash",
+            "WHD": [
+                85,
+                60,
+                60
+            ],
+            "count": 18,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 10,
+            "color": 2,
+            "pallet": "6"
+        },
+        {
+            "name": "cabint",
+            "WHD": [
+                60,
+                80,
+                200
+            ],
+            "count": 15,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 80,
+            "color": 3,
+            "pallet": "6"
+        },
+        {
+            "name": "server",
+            "WHD": [
+                70,
+                100,
+                30
+            ],
+            "count": 42,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 20,
+            "color": 4,
+            "pallet": "6"
+        }
+    ]
+}

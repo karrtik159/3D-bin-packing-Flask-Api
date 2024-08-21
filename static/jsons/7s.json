@@ -1,12 +1,12 @@
 {
     "pallet": [
         {
-            "id": "1"
+            "id": "7"
         }
     ],
     "box": [
         {
-            "name": "example0",
+            "name": "example6",
             "WHD": [
                 4,
                 4,
@@ -14,7 +14,7 @@
             ],
             "weight": 100,
             "corner": 0,
-            "pallet": "1",
+            "pallet": "7",
             "openTop": 0
         }
     ],
@@ -32,7 +32,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": 1,
-            "pallet": "1"
+            "pallet": "7"
         },
         {
             "name": "Kiste 1*1*1",
@@ -47,7 +47,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": 1,
-            "pallet": "1"
+            "pallet": "7"
         }
     ]
 }

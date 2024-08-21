@@ -1,12 +1,12 @@
 {
     "pallet": [
         {
-            "id": "1"
+            "id": "2"
         }
     ],
     "box": [
         {
-            "name": "example7-Bin1",
+            "name": "example1-Bin1",
             "WHD": [
                 5,
                 5,
@@ -14,11 +14,11 @@
             ],
             "weight": 100,
             "corner": 0,
-            "pallet": "1",
+            "pallet": "2",
             "openTop": 0
         },
         {
-            "name": "example7-Bin2",
+            "name": "example1-Bin2",
             "WHD": [
                 3,
                 3,
@@ -26,7 +26,7 @@
             ],
             "weight": 100,
             "corner": 0,
-            "pallet": "1",
+            "pallet": "2",
             "openTop": 0
         }
     ],
@@ -44,7 +44,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "yellow",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test2",
@@ -59,7 +59,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test3",
@@ -74,7 +74,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test4",
@@ -89,7 +89,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test5",
@@ -104,7 +104,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test6",
@@ -119,7 +119,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test7",
@@ -134,7 +134,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test8",
@@ -149,7 +149,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test9",
@@ -164,7 +164,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test10",
@@ -179,7 +179,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test11",
@@ -194,7 +194,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test12",
@@ -209,7 +209,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "pink",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test13",
@@ -224,7 +224,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test14",
@@ -239,7 +239,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "pink",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test15",
@@ -254,7 +254,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "pink",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test16",
@@ -269,7 +269,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test17",
@@ -284,7 +284,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "olive",
-            "pallet": "1"
+            "pallet": "2"
         },
         {
             "name": "test18",
@@ -299,7 +299,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "brown",
-            "pallet": "1"
+            "pallet": "2"
         }
     ]
 }

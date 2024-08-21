@@ -2,9 +2,22 @@ import markdown
 import flask, os, random
 from flask_cors import cross_origin
 from py3dbp import Packer, Bin, Item  # , Painter
+from exp_py3dbp import (
+    Packer as exp_packer,
+    Bin as exp_bin,
+    Item as exp_item,
+)  # , Painter
+
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
-from utils import makeDictPallet, makeDictBox, makeDictItem, getBoxAndItem, Stats
+from utils import (
+    makeDictPallet,
+    makeDictBox,
+    makeDictItem,
+    getBoxAndItem,
+    standard_getBoxAndItem,
+    Stats,
+)
 from pygments.formatters import HtmlFormatter
 
 # from models import TBox, TItem
@@ -250,7 +263,18 @@ def delete_item(item_id):
 @app.route("/reset_data", methods=["GET", "POST"])
 def reset_data():
     data = {
-        "pallet": [{"name": "Container 1"}, {"name": "Container 2"}],
+        "pallet": [
+            {"name": "Container 1"},
+            {"name": "Container 2"},
+            {"name": "Container 3"},
+            {"name": "Container 4"},
+            {"name": "Container 5"},
+            {"name": "Container 6"},
+            {"name": "Container 7"},
+            {"name": "Container 8"},
+            {"name": "Container 9"},
+            {"name": "Container 10"},
+        ],
         "box": [
             {
                 "name": "Pallet 1",
@@ -261,7 +285,7 @@ def reset_data():
                 "pallet": "Container 1",  # Link to Pallet 1
             },
             {
-                "name": "Pallet 1",
+                "name": "Pallet 2",
                 "WHD": [1300, 255, 275],
                 "weight": 26280,
                 "openTop": [1, 2],
@@ -554,6 +578,151 @@ def mkResultAPI():
             # Define base directory and plot filename
             base_dir = os.path.dirname(os.path.abspath(__file__))
             plot_filename = f"plot_{box.partno}.html"
+            plot_filepath = os.path.join(base_dir, "static", "assets", plot_filename)
+
+            # Ensure static directory exists
+            if not os.path.exists(os.path.join(base_dir, "static")):
+                os.makedirs(os.path.join(base_dir, "static"))
+
+            # Save plot to HTML
+            fig.write_html(plot_filepath)
+
+            plot_url_name = f"plot_url_{idx}"
+            # Make response
+            res["Success"] = True
+            boxname = f"box_{idx+1}"
+            sample.append(
+                {
+                    boxname: box_r,
+                    "fitItem": fitItem,
+                    "unfitItem": unfitItem,
+                    "stats": Stats(box),
+                    plot_url_name: "assets/" + plot_filename,
+                }
+            )
+
+        # If a pallet was selected, store the pallet information with the box data
+        if selected_pallet:
+            pallets_data = []
+            # boxes_data = [makeDictBox(box) for box in packer.bins]
+            pallets_data.append(makeDictPallet(selected_pallet))
+            res["pallets"] = pallets_data
+        else:
+            # If no specific pallet was selected, store information for all pallets
+            pallets_data = []
+            for pallet in Pallet.query.all():
+                # boxes_data = [makeDictBox(box) for box in pallet.containers]
+                pallets_data.append(makeDictPallet(pallet))
+            res["pallets"] = pallets_data
+
+        res["data"] = sample
+        return render_template("result.html", response=res)
+        # except ZeroDivisionError:
+        #     res["Reason"] = "ZeroDivisionError"
+        #     return res
+        # except Exception as e:
+        #     res["Reason"] = "cal packing err " + str(e)
+        #     return res
+
+
+@app.route("/standard/calPacking", methods=["GET", "POST"])
+@cross_origin()
+def Standalone_mkResultAPI():
+    res = {"Success": False}
+
+    if request.method == "GET":
+        # Fetch all pallets, boxes, and items to display in the template
+        return render_template(
+            "standard_packing.html",
+            pallets=Pallet.query.all(),
+            boxes=TBox.query.all(),
+            items=TItem.query.all(),
+        )
+
+    else:
+        try:
+            # Get selected pallet_id from the form
+            pallet_id = request.form.get("pallet_id")
+
+            # Fetch only the boxes and items associated with the selected pallet
+            if pallet_id:
+                selected_pallet = Pallet.query.get(pallet_id)
+                selected_boxes = TBox.query.filter_by(pallet_id=pallet_id).all()
+                selected_items = TItem.query.filter_by(pallet_id=pallet_id).all()
+            else:
+                # If no pallet is selected, use all pallets, boxes, and items
+                selected_pallet = None
+                selected_boxes = TBox.query.all()
+                selected_items = TItem.query.all()
+            # print(selected_boxes,selected_items)
+            # Initialize packer with selected boxes and items
+            packer, box, binding = standard_getBoxAndItem(
+                selected_boxes, selected_items
+            )
+
+            # Get form parameters
+            bigger_first = bool(request.form.get("bigger_first"))
+            distribute_items = bool(request.form.get("distribute_items"))
+            fix_point = bool(request.form.get("fix_point"))
+            check_stable = bool(request.form.get("check_stable"))
+            gap_on = bool(request.form.get("gap_on"))
+            gap = request.form.get("slider_Gap")
+
+            support_surface_ratio_str = request.form.get("slider")
+            support_surface_ratio = (
+                float(support_surface_ratio_str)
+                if support_surface_ratio_str
+                else float(0.75)
+            )
+
+            number_of_decimals_str = request.form.get("number_of_decimals")
+            number_of_decimals = (
+                int(number_of_decimals_str) if number_of_decimals_str else 0
+            )
+            selected_boxes = TBox.query.filter_by(pallet_id=pallet_id).all()
+
+            if len(selected_boxes) > 1:
+                # Number of elements is greater than 1
+                distribute_items = True
+                print("distribute_items = ", distribute_items)
+
+        except Exception as e:
+            res["Reason"] = "input data err " + (str(e) if e else "no error")
+            return res
+
+        # try:
+        sample = []
+        # Pack using the parameters from the form
+        packer.pack(
+            bigger_first=bigger_first,
+            distribute_items=distribute_items,
+            fix_point=fix_point,
+            check_stable=check_stable,
+            support_surface_ratio=support_surface_ratio,
+            binding=binding,
+            number_of_decimals=number_of_decimals,
+            gap_on=gap_on,
+            gap=gap,
+        )
+        for idx, box in enumerate(packer.bins):
+            # Make box dict
+
+            box_r = makeDictBox(box)
+
+            # Make item dict
+            fitItem, unfitItem = [], []
+            for item in box.items:
+                fitItem.append(makeDictItem(item))
+
+            for item in box.unfitted_items:
+                unfitItem.append(makeDictItem(item))
+
+            # Initialize Plot
+            fig = box._plot()
+
+            # Define base directory and plot filename
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            plot_filename = f"stnadard_plot_{box.partno}.html"
             plot_filepath = os.path.join(base_dir, "static", "assets", plot_filename)
 
             # Ensure static directory exists

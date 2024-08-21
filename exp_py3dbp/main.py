@@ -1,14 +1,16 @@
+import numpy as np
 from .constants import RotationType, Axis
 from .auxiliary_methods import intersect, set2Decimal, generate_vertices
 import numpy as np
+from math import sqrt
 
-# # required to plot a representation of Bin and contained items
+# required to plot a representation of Bin and contained items
 import plotly.express as px
 import plotly.graph_objects as go
 from collections import Counter
 from typing import Type
-from collections import Counter
 import copy
+
 
 DEFAULT_NUMBER_OF_DECIMALS = 0
 START_POSITION = [0, 0, 0]
@@ -16,7 +18,9 @@ START_POSITION = [0, 0, 0]
 
 class Item:
 
-    def __init__(self, partno, name, WHD, weight, level, loadbear, updown, color):
+    def __init__(
+        self, partno, name, WHD, weight, level, loadbear=9999, updown=1, color=1
+    ):
         """ """
         self.partno = partno
         self.name = name
@@ -30,7 +34,6 @@ class Item:
         # loadbear
         self.loadbear = loadbear
         # Upside down? True or False
-        # self.updown = updown if typeof == "cube" else False
         self.updown = True if updown == 1 else False
         self.valid_rotations = rotate = (
             RotationType.ALL if self.updown == True else RotationType.Notupdown
@@ -40,6 +43,7 @@ class Item:
         self.rotation_type = 0
         self.position = START_POSITION
         self.number_of_decimals = DEFAULT_NUMBER_OF_DECIMALS
+        # self.gap_on = False
         self.gap = 0
 
     def formatNumbers(self, number_of_decimals):
@@ -82,17 +86,41 @@ class Item:
     def getDimension(self):
         """rotation type"""
         if self.rotation_type == RotationType.RT_WHD:
-            dimension = [self.width, self.height, self.depth]
+            dimension = [
+                self.width + self.gap,
+                self.height + self.gap,
+                self.depth + self.gap,
+            ]
         elif self.rotation_type == RotationType.RT_HWD:
-            dimension = [self.height, self.width, self.depth]
+            dimension = [
+                self.height + self.gap,
+                self.width + self.gap,
+                self.depth + self.gap,
+            ]
         elif self.rotation_type == RotationType.RT_HDW:
-            dimension = [self.height, self.depth, self.width]
+            dimension = [
+                self.height + self.gap,
+                self.depth + self.gap,
+                self.width + self.gap,
+            ]
         elif self.rotation_type == RotationType.RT_DHW:
-            dimension = [self.depth, self.height, self.width]
+            dimension = [
+                self.depth + self.gap,
+                self.height + self.gap,
+                self.width + self.gap,
+            ]
         elif self.rotation_type == RotationType.RT_DWH:
-            dimension = [self.depth, self.width, self.height]
+            dimension = [
+                self.depth + self.gap,
+                self.width + self.gap,
+                self.height + self.gap,
+            ]
         elif self.rotation_type == RotationType.RT_WDH:
-            dimension = [self.width, self.depth, self.height]
+            dimension = [
+                self.width + self.gap,
+                self.depth + self.gap,
+                self.height + self.gap,
+            ]
         else:
             dimension = []
 
@@ -269,122 +297,6 @@ class Bin:
 
         return set2Decimal(total_weight, self.number_of_decimals)
 
-    def putItem(self, item, pivot, axis=None):
-        """put item in bin"""
-        fit = False
-        valid_item_position = item.position
-        item.position = pivot
-        rotate = RotationType.ALL if item.updown == True else RotationType.Notupdown
-        for i in range(0, len(rotate)):
-            item.rotation_type = i
-            dimension = item.getDimension()
-            # rotatate
-            if (
-                self.width < pivot[0] + dimension[0]
-                or self.height < pivot[1] + dimension[1]
-                or self.depth < pivot[2] + dimension[2]
-            ):
-                continue
-
-            fit = True
-
-            for current_item_in_bin in self.items:
-                if intersect(current_item_in_bin, item):
-                    fit = False
-                    break
-
-            if fit:
-                # cal total weight
-                if self.getTotalWeight() + item.weight > self.max_weight:
-                    fit = False
-                    return fit
-
-                # fix point float prob
-                if self.fix_point == True:
-
-                    [w, h, d] = dimension
-                    [x, y, z] = [float(pivot[0]), float(pivot[1]), float(pivot[2])]
-
-                    for i in range(3):
-                        # fix height
-                        y = self.checkHeight(
-                            [x, x + float(w), y, y + float(h), z, z + float(d)]
-                        )
-                        # fix width
-                        x = self.checkWidth(
-                            [x, x + float(w), y, y + float(h), z, z + float(d)]
-                        )
-                        # fix depth
-                        z = self.checkDepth(
-                            [x, x + float(w), y, y + float(h), z, z + float(d)]
-                        )
-
-                    # check stability on item
-                    # rule :
-                    # 1. Define a support ratio, if the ratio below the support surface does not exceed this ratio, compare the second rule.
-                    # 2. If there is no support under any vertices of the bottom of the item, then fit = False.
-                    if self.check_stable == True:
-                        # Cal the surface area of ​​item.
-                        item_area_lower = int(dimension[0] * dimension[1])
-                        # Cal the surface area of ​​the underlying support.
-                        support_area_upper = 0
-                        for i in self.fit_items:
-                            # Verify that the lower support surface area is greater than the upper support surface area * support_surface_ratio.
-                            if z == i[5]:
-                                area = len(
-                                    set([j for j in range(int(x), int(x + int(w)))])
-                                    & set([j for j in range(int(i[0]), int(i[1]))])
-                                ) * len(
-                                    set([j for j in range(int(y), int(y + int(h)))])
-                                    & set([j for j in range(int(i[2]), int(i[3]))])
-                                )
-                                support_area_upper += area
-
-                        # If not , get four vertices of the bottom of the item.
-                        if (
-                            support_area_upper / item_area_lower
-                            < self.support_surface_ratio
-                        ):
-                            four_vertices = [
-                                [x, y],
-                                [x + float(w), y],
-                                [x, y + float(h)],
-                                [x + float(w), y + float(h)],
-                            ]
-                            #  If any vertices is not supported, fit = False.
-                            c = [False, False, False, False]
-                            for i in self.fit_items:
-                                if z == i[5]:
-                                    for jdx, j in enumerate(four_vertices):
-                                        if (i[0] <= j[0] <= i[1]) and (
-                                            i[2] <= j[1] <= i[3]
-                                        ):
-                                            c[jdx] = True
-                            if False in c:
-                                item.position = valid_item_position
-                                fit = False
-                                return fit
-
-                    self.fit_items = np.append(
-                        self.fit_items,
-                        np.array([[x, x + float(w), y, y + float(h), z, z + float(d)]]),
-                        axis=0,
-                    )
-                    item.position = [set2Decimal(x), set2Decimal(y), set2Decimal(z)]
-
-                if fit:
-                    self.items.append(copy.deepcopy(item))
-
-            else:
-                item.position = valid_item_position
-
-            return fit
-
-        else:
-            item.position = valid_item_position
-
-        return fit
-
     def checkDepth(self, unfix_point):
         """fix item position z"""
         z_ = [[0, 0], [float(self.depth), float(self.depth)]]
@@ -458,7 +370,7 @@ class Bin:
                 a = Item(
                     partno="corner{}".format(i),
                     name="corner",
-                    typeof="cube",
+                    # typeof='cube',
                     WHD=(corner, corner, corner),
                     weight=0,
                     level=0,
@@ -500,6 +412,259 @@ class Bin:
 
         self.fit_items = np.append(self.fit_items, np.array([corner]), axis=0)
         return
+
+    def putItem(self, item, pivot, distance_3d):
+        """Evaluate whether an item can be placed into a certain bin with which orientation. If yes, perform put action.
+        Args:
+            item: any item in item list.
+            pivot: an (x, y, z) coordinate, the back-lower-left corner of the item will be placed at the pivot.
+            distance_3d: a 3D parameter to determine which orientation should be chosen.
+        Returns:
+            Boolean variable: False when an item couldn't be placed into the bin; True when an item could be placed and perform put action.
+        """
+        # Initialize base variables
+        fit = False
+        valid_item_position = item.position
+        item.position = pivot
+        rotation_type_list = self.can_hold_item_with_rotation(item, pivot)
+
+        if not rotation_type_list:
+            item.position = valid_item_position
+            return False
+
+        best_fit = None
+        min_margin_sum = float("inf")
+
+        for rotation in rotation_type_list:
+            item.rotation_type = rotation
+            dimension = item.getDimension()
+
+            # Condition 1: Check if the item exceeds bin boundaries
+            if (
+                pivot[0] + dimension[0] > self.width
+                or pivot[1] + dimension[1] > self.height
+                or pivot[2] + dimension[2] > self.depth
+            ):
+                continue  # Skip to the next rotation if boundaries are exceeded
+
+            fit = True
+
+            # Condition 2: Check for intersections with other items
+            for current_item_in_bin in self.items:
+                if intersect(current_item_in_bin, item):
+                    fit = False
+                    break  # Exit the loop if an intersection is found
+
+            if not fit:
+                continue  # Skip to the next rotation if there is an intersection
+
+            # Condition 3: Check if adding this item exceeds the bin's maximum weight
+            if self.getTotalWeight() + item.weight > self.max_weight:
+                fit = False
+                continue  # Skip to the next rotation if weight exceeds the limit
+
+            # Condition 4: Handle point fixing and stability if required
+            if self.fix_point:
+                [w, h, d] = dimension
+                [x, y, z] = map(float, pivot)
+
+                y = self.checkHeight(
+                    [x, x + float(w), y, y + float(h), z, z + float(d)]
+                )
+                x = self.checkWidth([x, x + float(w), y, y + float(h), z, z + float(d)])
+                z = self.checkDepth([x, x + float(w), y, y + float(h), z, z + float(d)])
+
+            # Stability Check
+            if self.check_stable:
+                item_area_lower = (w - self.gap) * (h - self.gap)
+                support_area_upper = 0
+
+                for i in self.fit_items:
+                    if z == i[5]:
+                        area = len(
+                            set([j for j in range(int(x), int(x + int(w)))])
+                            & set([j for j in range(int(i[0]), int(i[1]))])
+                        ) * len(
+                            set([j for j in range(int(y), int(y + int(h)))])
+                            & set([j for j in range(int(i[2]), int(i[3]))])
+                        )
+                        support_area_upper += area
+
+                # Verify support surface ratio
+                if support_area_upper / item_area_lower < self.support_surface_ratio:
+                    four_vertices = [
+                        [x, y],
+                        [x + float(w), y],
+                        [x, y + float(h)],
+                        [x + float(w), y + float(h)],
+                    ]
+                    supported = [False] * 4
+                    for i in self.fit_items:
+                        if z == i[5]:
+                            for idx, vertex in enumerate(four_vertices):
+                                if (i[0] <= vertex[0] <= i[1]) and (
+                                    i[2] <= vertex[1] <= i[3]
+                                ):
+                                    supported[idx] = True
+                    if not all(supported):
+                        fit = False
+                        continue  # Skip to the next rotation if stability check fails
+
+                # Append the item position after fixing points
+                self.fit_items = np.append(
+                    self.fit_items,
+                    [[x, x + float(w), y, y + float(h), z, z + float(d)]],
+                    axis=0,
+                )
+                item.position = [set2Decimal(x), set2Decimal(y), set2Decimal(z)]
+
+            # If the current rotation fits, calculate the margins
+            # if fit:
+            #     margins_3d = [
+            #         distance_3d[0] - dimension[0],
+            #         distance_3d[1] - dimension[1],
+            #         distance_3d[2] - dimension[2],
+            #     ]
+            #     margin_sum = sum(margins_3d)
+
+            #     if margin_sum < min_margin_sum:
+            #         min_margin_sum = margin_sum
+            best_fit = rotation
+
+        # Final decision: If a suitable rotation was found, place the item
+        if best_fit is not None:
+            item.rotation_type = best_fit
+            self.items.append(item)
+            self.total_items += 1
+            return True
+
+        # Reset position if no suitable rotation was found
+        item.position = valid_item_position
+        return False
+
+    def can_hold_item_with_rotation(self, item, pivot, min_distance=0):
+        """Evaluate whether one item can be placed into a bin with all optional orientations, ensuring
+        it doesn't overlap with existing items, exceeds weight limits, or violates the minimum distance
+        from other items.
+
+        Args:
+            item: The item to be placed in the bin.
+            pivot: An (x, y, z) coordinate, where the back-lower-left corner of the item will be placed.
+            min_distance: The minimum allowable distance from other items (default is 0).
+
+        Returns:
+            A list containing the best rotation type based on the maximum of minimum distances and
+            the shortest surface ratio of the longest side.
+            If none are valid, returns an empty list.
+        """
+
+        item.position = pivot
+        valid_rotations = (
+            []
+        )  # Store valid rotations, their minimum distances, and surface ratios
+
+        for rotation in item.valid_rotations:
+            item.rotation_type = rotation
+            dimension = item.getDimension()
+
+            # Check if the item fits within the bin's boundaries
+            if (
+                pivot[0] + dimension[0] <= self.width  # x-axis
+                and pivot[1] + dimension[1] <= self.height  # y-axis
+                and pivot[2] + dimension[2] <= self.depth  # z-axis
+            ):
+                fit = True
+                min_distance_for_rotation = float("inf")  # Initialize to a large number
+
+                # Check for intersection with other items in the bin
+                for current_item_in_bin in self.items:
+                    current_item_dim = current_item_in_bin.getDimension()
+
+                    # Check for overlap in each dimension
+                    if (
+                        pivot[0] < current_item_in_bin.position[0] + current_item_dim[0]
+                        and pivot[0] + dimension[0] > current_item_in_bin.position[0]
+                        and pivot[1]
+                        < current_item_in_bin.position[1] + current_item_dim[1]
+                        and pivot[1] + dimension[1] > current_item_in_bin.position[1]
+                        and pivot[2]
+                        < current_item_in_bin.position[2] + current_item_dim[2]
+                        and pivot[2] + dimension[2] > current_item_in_bin.position[2]
+                    ):
+                        fit = False
+                        break
+
+                if fit:
+                    # Check if the total weight exceeds the bin's max weight capacity
+                    if self.getTotalWeight() + item.weight > self.max_weight:
+                        fit = False
+                        continue
+
+                    # Check the minimum distance constraint
+                    for placed_item in self.items:
+                        placed_item_dim = placed_item.getDimension()
+
+                        # Calculate the distance between the pivot points of the two items
+                        dx = max(pivot[0], placed_item.position[0]) - min(
+                            pivot[0] + dimension[0],
+                            placed_item.position[0] + placed_item_dim[0],
+                        )
+                        dy = max(pivot[1], placed_item.position[1]) - min(
+                            pivot[1] + dimension[1],
+                            placed_item.position[1] + placed_item_dim[1],
+                        )
+                        dz = max(pivot[2], placed_item.position[2]) - min(
+                            pivot[2] + dimension[2],
+                            placed_item.position[2] + placed_item_dim[2],
+                        )
+
+                        distance = sqrt(dx**2 + dy**2 + dz**2)
+
+                        # Save the calculated distance in the dictionary for tracking
+                        self.distances[
+                            f'"previous item": "{placed_item.partno}", "current item": "{item.partno}", "rotation type": "{rotation}"'
+                        ] = distance
+
+                        # Track the smallest distance for this rotation
+                        if distance < min_distance_for_rotation:
+                            min_distance_for_rotation = distance
+
+                        # If the distance is less than the minimum required, invalidate this rotation
+                        # if distance < min_distance:
+                        #     fit = False
+                        #     break
+
+                    # If the item fits within the bin, meets weight, intersection, and distance requirements
+                    if fit:
+                        # Calculate surface area ratios
+                        longest_side = max(self.width, self.height, self.depth)
+
+                        if longest_side == self.width:
+                            surface_area_1 = (
+                                dimension[0] * dimension[1]
+                            )  # Surface area on y-z plane
+                        elif longest_side == self.height:
+                            surface_area_1 = (
+                                dimension[0] * dimension[2]
+                            )  # Surface area on x-z plane
+                        else:
+                            surface_area_1 = (
+                                dimension[1] * dimension[2]
+                            )  # Surface area on x-y plane
+
+                        surface_ratios = [surface_area_1 / longest_side]
+
+                        valid_rotations.append(
+                            (rotation, min_distance_for_rotation, surface_ratios)
+                        )
+
+        # If there are valid rotations, select the one with the best criteria
+        if valid_rotations:
+            # Sort by minimum distance first (in descending order) and then by surface ratio (in ascending order)
+            valid_rotations.sort(key=lambda x: (x[2]))
+            return [valid_rotations[0][0]]
+
+        return []
 
     def clearBin(self):
         """clear item which in bin"""
@@ -634,46 +799,6 @@ class Packer:
 
         return self.items.append(item)
 
-    def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
-        """pack item to bin"""
-        fitted = False
-        bin.fix_point = fix_point
-        bin.check_stable = check_stable
-        bin.support_surface_ratio = support_surface_ratio
-
-        # first put item on (0,0,0) , if corner exist ,first add corner in box.
-        if bin.corner != 0 and not bin.items:
-            corner_lst = bin.addCorner()
-            for i in range(len(corner_lst)):
-                bin.putCorner(i, corner_lst[i])
-
-        elif not bin.items:
-            response = bin.putItem(item, item.position)
-
-            if not response:
-                bin.unfitted_items.append(item)
-            return
-
-        for axis in range(0, 3):
-            items_in_bin = bin.items
-            for ib in items_in_bin:
-                pivot = [0, 0, 0]
-                w, h, d = ib.getDimension()
-                if axis == Axis.WIDTH:
-                    pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
-                elif axis == Axis.HEIGHT:
-                    pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
-                elif axis == Axis.DEPTH:
-                    pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
-
-                if bin.putItem(item, pivot, axis):
-                    fitted = True
-                    break
-            if fitted:
-                break
-        if not fitted:
-            bin.unfitted_items.append(item)
-
     def sortBinding(self, bin):
         """sorted by binding"""
         b, front, back = [], [], []
@@ -774,7 +899,6 @@ class Packer:
                 ):
                     y = len(y_set & area[j][1]) / (y_ed - y_st) * int(i.weight)
                     area[j][2] += y
-                    x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
                     if j >= 2:
                         area[j - 2][2] += int(i.weight) - x
                     else:
@@ -817,6 +941,77 @@ class Packer:
             result.append(round(i / sum(r) * 100, 2))
         return result
 
+    def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
+        """
+        Packs an item into a bin.
+
+        Args:
+            bin (Bin): The bin to pack the item into.
+            item (Item): The item to be packed.
+            fix_point (bool): Whether to fix the item's position at (0, 0, 0).
+            check_stable (bool): Whether to check if the bin is stable after packing.
+            support_surface_ratio (float): The ratio of the item's support surface to the bin's surface.
+
+        Returns:
+            None
+
+        """
+
+        fitted = False
+        bin.fix_point = fix_point
+        bin.check_stable = check_stable
+        bin.support_surface_ratio = support_surface_ratio
+
+        # first put item on (0,0,0) , if corner exist ,first add corner in box.
+        if bin.corner != 0 and not bin.items:
+            corner_lst = bin.addCorner()
+            for i in range(len(corner_lst)):
+                bin.putCorner(i, corner_lst[i])
+
+        elif not bin.items:
+            response = bin.putItem(
+                item, START_POSITION, [bin.width, bin.height, bin.depth]
+            )
+
+            if not response:
+                bin.unfitted_items.append(item)
+
+            return
+
+        # else:
+        #     pivot_point = self.choose_pivot_point(bin, item)
+        #     pivot_dict = self.pivot_dict(bin, item)
+
+        #     if not pivot_point:
+        #         bin.unfitted_items.append(item)
+        #         return
+
+        #     distance_3D = pivot_dict[tuple(pivot_point)]
+        #     response = bin.putItem(item, pivot_point, distance_3D)
+        #     if not response:
+        #         bin.unfitted_items.append(item)
+        #     return
+
+        for axis in range(0, 3):
+            items_in_bin = bin.items
+            for ib in items_in_bin:
+                pivot = [0, 0, 0]
+                w, h, d = ib.getDimension()
+                if axis == Axis.WIDTH:
+                    pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
+                elif axis == Axis.HEIGHT:
+                    pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
+                elif axis == Axis.DEPTH:
+                    pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
+
+                if bin.putItem(item, pivot, axis):
+                    fitted = True
+                    break
+            if fitted:
+                break
+        if not fitted:
+            bin.unfitted_items.append(item)
+
     def pack(
         self,
         bigger_first=False,
@@ -850,10 +1045,13 @@ class Packer:
             self.sortBinding(bin)
 
         for idx, bin in enumerate(self.bins):
-            bin.gap = int(gap) if gap_on == True else 0
             # pack item to bin
+            bin.gap = int(gap) if gap_on == True else 0
             for item in self.items:
+                # print(gap_on)
                 item.gap = int(gap) if gap_on == True else 0
+                # print(item.gap)
+
                 self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
 
             if binding != []:

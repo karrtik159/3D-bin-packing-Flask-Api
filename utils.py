@@ -2,6 +2,11 @@ import random, os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 from py3dbp import Packer, Bin, Item  # , Painter
+from exp_py3dbp import (
+    Packer as exp_packer,
+    Bin as exp_bin,
+    Item as exp_item,
+)  # , Painter
 
 
 def randColor(s):
@@ -94,6 +99,79 @@ def makeDictItem(item):
 
 
 def getBoxAndItem(selected_boxes, selected_items):
+    try:
+        packer = exp_packer()
+
+        # Dictionary to map color codes to color names
+        color_dict = {
+            1: "red",
+            2: "yellow",
+            3: "blue",
+            4: "green",
+            5: "purple",
+            6: "brown",
+            7: "orange",
+        }
+
+        # Process each selected box
+        for box_data in selected_boxes:
+            # Parse the WHD and openTop fields
+            whd_list = list(map(float, box_data.whd.strip("[]").split(",")))
+            width, height, depth = whd_list
+            openTop = int(box_data.openTop.strip("[]").split(",")[0])
+
+            # Create a Bin object (which represents a box)
+            box = exp_bin(
+                partno=box_data.name,
+                WHD=(width, height, depth),
+                max_weight=box_data.weight,
+                corner=box_data.corner,
+                put_type=openTop,
+            )
+
+            # Add the Bin object to the packer
+            packer.addBin(box)
+
+        # Process each selected item
+        for item_data in selected_items:
+            item_whd = list(map(float, item_data.whd.strip("[]").split(",")))
+            item_width, item_height, item_depth = item_whd
+
+            # Add each item to the packer as many times as specified by the count
+            for j in range(item_data.count):
+                item = exp_item(
+                    partno=item_data.name + f"-{j+1}",
+                    name=item_data.name,
+                    WHD=(item_width, item_height, item_depth),
+                    weight=item_data.weight,
+                    level=int(item_data.level),
+                    loadbear=item_data.loadbear,
+                    updown=bool(item_data.updown),
+                    color=color_dict.get(
+                        item_data.color, "gray"
+                    ),  # Default to 'gray' if color not found
+                )
+
+                # Add the Item object to the packer
+                packer.addItem(item)
+
+        # Assuming binding data is optional or not used in this context
+        binding = []
+
+        return packer, box, binding
+
+    except SQLAlchemyError as e:
+        print(f"Database error occurred: {e}")
+        raise
+    except ValueError as e:
+        print(f"Data error: {e}")
+        raise
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise
+
+
+def standard_getBoxAndItem(selected_boxes, selected_items):
     try:
         packer = Packer()
 
