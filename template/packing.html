@@ -50,6 +50,23 @@
                checked>
         <label class="form-check-label" for="check_stable">Check stability of the packing.</label>
       </div>
+      <!-- Checkbox for use_comaprison -->
+      <div class="form-check mb-4">
+        <input class="form-check-input"
+               type="checkbox"
+               name="use_greedy"
+               id="use_greedy"
+               checked>
+        <label class="form-check-label" for="use_greedy">Greedy Optimization</label>
+      </div>
+      <!-- Checkbox for use_greedy -->
+      <div class="form-check mb-4">
+        <input class="form-check-input"
+               type="checkbox"
+               name="use_combinations"
+               id="use_combinations">
+        <label class="form-check-label" for="use_combinations">Combinations Optimization</label>
+      </div>
       <!-- Multiple select for binding -->
       <div class="form-group mb-4">
         <label for="binding" class="form-label">Binding:</label>
@@ -63,7 +80,7 @@
       <div class="form-group mb-4">
         <label for="slider" class="form-label">
           Support Surface Ratio
-          <span class="badge bg-info" id="sliderValue">0.75</span>
+          <span class="badge bg-info" id="sliderValue">0.50</span>
         </label>
         <input type="range"
                class="form-range"
@@ -72,7 +89,7 @@
                min="0"
                max="1"
                step="0.01"
-               value="0.75"
+               value="0.5"
                oninput="updateSliderValue(this.value)">
       </div>
       <!-- Input for number_of_decimals -->

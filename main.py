@@ -80,10 +80,7 @@ def create_tables():
 
 @app.route("/")
 def index():
-    # pallets = Pallet.query.all()
-    # boxes = TBox.query.all()
-    # items = TItem.query.all()
-    # return render_template("index.html", pallets=pallets, boxes=boxes, items=items)
+    # Fetch all pallets
     pallets = Pallet.query.all()
     selected_pallet = None
 
@@ -143,46 +140,73 @@ def add_box():
     form = BoxForm()
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
 
-    pallet_id = request.args.get("pallet_id")
-    if pallet_id:
-        form.pallet_id.data = int(pallet_id)
-
     if form.validate_on_submit():
-        box = TBox(
-            name=form.name.data,
-            whd=form.whd.data,
-            weight=form.weight.data,
-            openTop=form.openTop.data,
-            corner=form.corner.data,
-            pallet_id=form.pallet_id.data,
-        )
-        db.session.add(box)
-        db.session.commit()
-        flash(f"Box {form.name.data} added!", "success")
-        return redirect(url_for("index"))
+        try:
+            box = TBox(
+                name=form.name.data,
+                whd=form.whd.data,
+                weight=form.weight.data,
+                openTop=form.openTop.data,
+                corner=form.corner.data,
+                pallet_id=form.pallet_id.data,
+            )
+            db.session.add(box)
+            db.session.commit()
+            flash(f"Box {form.name.data} added successfully!", "success")
+            return redirect(url_for("index"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred while adding the box: {str(e)}", "danger")
+
+    # Flash field-specific errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{form[field].label.text}: {error}", "danger")
+
     return render_template("box_form.html", form=form)
 
 
 @app.route("/add_item", methods=["GET", "POST"])
 def add_item():
     form = ItemForm()
+
+    # Populate the pallet choices
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
+
     if form.validate_on_submit():
-        item = TItem(
-            name=form.name.data,
-            whd=form.whd.data,
-            count=form.count.data,
-            updown=form.updown.data,
-            level=form.level.data,
-            loadbear=form.loadbear.data,
-            weight=form.weight.data,
-            color=form.color.data,
-            pallet_id=form.pallet_id.data,
-        )
-        db.session.add(item)
-        db.session.commit()
-        flash(f"Item {form.name.data} added!", "success")
-        return redirect(url_for("index"))
+        try:
+            # Create a new item instance with the form data
+            item = TItem(
+                name=form.name.data,
+                whd=form.whd.data,
+                count=form.count.data,
+                updown=form.updown.data,
+                level=form.level.data,
+                loadbear=form.loadbear.data,
+                weight=form.weight.data,
+                color=form.color.data,
+                pallet_id=form.pallet_id.data,
+            )
+
+            # Add the item to the database session
+            db.session.add(item)
+
+            # Commit the session to save the item to the database
+            db.session.commit()
+            flash(f"Item {form.name.data} added!", "success")
+            return redirect(url_for("index"))
+
+        except Exception as e:
+            # Rollback the session in case of an error
+            db.session.rollback()
+            flash(f"An error occurred while adding the item: {str(e)}", "danger")
+
+    # If form validation failed, flash specific errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{form[field].label.text}: {error}", "danger")
+
+    # Render the form, showing any errors that occurred
     return render_template("item_form.html", form=form)
 
 
@@ -190,7 +214,10 @@ def add_item():
 def edit_box(box_id):
     box = TBox.query.get_or_404(box_id)
     form = BoxForm()
+
+    # Populate the pallet choices
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
+
     if request.method == "GET":
         form.name.data = box.name
         form.whd.data = box.whd
@@ -198,16 +225,28 @@ def edit_box(box_id):
         form.openTop.data = box.openTop
         form.corner.data = box.corner
         form.pallet_id.data = box.pallet_id
+
     if form.validate_on_submit():
-        box.name = form.name.data
-        box.whd = form.whd.data
-        box.weight = form.weight.data
-        box.openTop = form.openTop.data
-        box.corner = form.corner.data
-        box.pallet_id = form.pallet_id.data
-        db.session.commit()
-        flash(f"Box {form.name.data} updated!", "success")
-        return redirect(url_for("index"))
+        try:
+            box.name = form.name.data
+            box.whd = form.whd.data
+            box.weight = form.weight.data
+            box.openTop = form.openTop.data
+            box.corner = form.corner.data
+            box.pallet_id = form.pallet_id.data
+            db.session.commit()
+            flash(f"Box {form.name.data} updated!", "success")
+            return redirect(url_for("index"))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred while updating the item: {str(e)}", "danger")
+
+    # If form validation failed, flash specific errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{form[field].label.text}: {error}", "danger")
+
     return render_template("box_form.html", form=form, edit=True)
 
 
@@ -215,7 +254,10 @@ def edit_box(box_id):
 def edit_item(item_id):
     item = TItem.query.get_or_404(item_id)
     form = ItemForm()
+
+    # Populate the pallet choices
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
+
     if request.method == "GET":
         form.name.data = item.name
         form.whd.data = item.whd
@@ -226,19 +268,31 @@ def edit_item(item_id):
         form.weight.data = item.weight
         form.color.data = item.color
         form.pallet_id.data = item.pallet_id
+
     if form.validate_on_submit():
-        item.name = form.name.data
-        item.whd = form.whd.data
-        item.count = form.count.data
-        item.updown = form.updown.data
-        item.level = form.level.data
-        item.loadbear = form.loadbear.data
-        item.weight = form.weight.data
-        item.color = form.color.data
-        item.pallet_id = form.pallet_id.data
-        db.session.commit()
-        flash(f"Item {form.name.data} updated!", "success")
-        return redirect(url_for("index"))
+        try:
+            item.name = form.name.data
+            item.whd = form.whd.data
+            item.count = form.count.data
+            item.updown = form.updown.data
+            item.level = form.level.data
+            item.loadbear = form.loadbear.data
+            item.weight = form.weight.data
+            item.color = form.color.data
+            item.pallet_id = form.pallet_id.data
+
+            db.session.commit()
+            flash(f"Item {form.name.data} updated!", "success")
+            return redirect(url_for("index"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred while updating the item: {str(e)}", "danger")
+
+    # If form validation failed, flash specific errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"{form[field].label.text}: {error}", "danger")
+
     return render_template("item_form.html", form=form, edit=True)
 
 
@@ -282,7 +336,7 @@ def reset_data():
                 "weight": 26280,
                 "openTop": [1, 2],
                 "corner": 0,
-                "pallet": "Container 1",  # Link to Pallet 1
+                "pallet": "1",  # Link to Pallet 1
             },
             {
                 "name": "Pallet 2",
@@ -290,7 +344,7 @@ def reset_data():
                 "weight": 26280,
                 "openTop": [1, 2],
                 "corner": 0,
-                "pallet": "Container 2",  # Link to Pallet 1
+                "pallet": "1",  # Link to Pallet 1
             },
         ],
         "item": [
@@ -303,7 +357,7 @@ def reset_data():
                 "loadbear": 200,
                 "weight": 85,
                 "color": 1,
-                "pallet": "Container 1",  # Link to Pallet 1
+                "pallet": "1",  # Link to Pallet 1
             },
             {
                 "name": "Panasonic_NA-V160GBS",
@@ -314,7 +368,7 @@ def reset_data():
                 "loadbear": 200,
                 "weight": 30,
                 "color": 2,
-                "pallet": "Container 2",  # Link to Pallet 2
+                "pallet": "1",  # Link to Pallet 2
             },
             # Add other items similarly with pallet references
         ],
@@ -522,6 +576,8 @@ def mkResultAPI():
             check_stable = bool(request.form.get("check_stable"))
             gap_on = bool(request.form.get("gap_on"))
             gap = request.form.get("slider_Gap")
+            use_greedy = bool(request.form.get("use_greedy"))
+            use_combinations = bool(request.form.get("use_combinations"))
 
             support_surface_ratio_str = request.form.get("slider")
             support_surface_ratio = (
@@ -558,6 +614,8 @@ def mkResultAPI():
             number_of_decimals=number_of_decimals,
             gap_on=gap_on,
             gap=gap,
+            use_greedy=use_greedy,
+            use_combinations=use_combinations,
         )
         for idx, box in enumerate(packer.bins):
             # Make box dict

@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 from .constants import RotationType, Axis
 from .auxiliary_methods import intersect, set2Decimal, generate_vertices
 import numpy as np
@@ -297,6 +298,18 @@ class Bin:
 
         return set2Decimal(total_weight, self.number_of_decimals)
 
+    def getPackedVolume(self):
+        """Returns the total volume of the items packed in the bin"""
+        return sum(item.getVolume() for item in self.items)
+
+    def getUtilization(self):
+        """Returns the utilization of the bin as a percentage"""
+        bin_volume = self.getVolume()
+        if bin_volume == 0:
+            return 0  # Avoid division by zero
+        packed_volume = self.getPackedVolume()
+        return (packed_volume / bin_volume) * 100
+
     def checkDepth(self, unfix_point):
         """fix item position z"""
         z_ = [[0, 0], [float(self.depth), float(self.depth)]]
@@ -413,7 +426,7 @@ class Bin:
         self.fit_items = np.append(self.fit_items, np.array([corner]), axis=0)
         return
 
-    def putItem(self, item, pivot, distance_3d):
+    def putItem(self, item, pivot, axis=0):
         """Evaluate whether an item can be placed into a certain bin with which orientation. If yes, perform put action.
         Args:
             item: any item in item list.
@@ -464,9 +477,9 @@ class Bin:
                 continue  # Skip to the next rotation if weight exceeds the limit
 
             # Condition 4: Handle point fixing and stability if required
+            [w, h, d] = dimension
+            [x, y, z] = map(float, pivot)
             if self.fix_point:
-                [w, h, d] = dimension
-                [x, y, z] = map(float, pivot)
 
                 y = self.checkHeight(
                     [x, x + float(w), y, y + float(h), z, z + float(d)]
@@ -788,6 +801,8 @@ class Packer:
         self.total_items = 0
         self.binding = []
         # self.apex = []
+        self.best_utilization = 0
+        self.best_combination = None
 
     def addBin(self, bin):
         """ """
@@ -978,20 +993,6 @@ class Packer:
 
             return
 
-        # else:
-        #     pivot_point = self.choose_pivot_point(bin, item)
-        #     pivot_dict = self.pivot_dict(bin, item)
-
-        #     if not pivot_point:
-        #         bin.unfitted_items.append(item)
-        #         return
-
-        #     distance_3D = pivot_dict[tuple(pivot_point)]
-        #     response = bin.putItem(item, pivot_point, distance_3D)
-        #     if not response:
-        #         bin.unfitted_items.append(item)
-        #     return
-
         for axis in range(0, 3):
             items_in_bin = bin.items
             for ib in items_in_bin:
@@ -1012,6 +1013,384 @@ class Packer:
         if not fitted:
             bin.unfitted_items.append(item)
 
+    # def OLD_pack(
+    #     self,
+    #     bigger_first=False,
+    #     distribute_items=True,
+    #     fix_point=True,
+    #     check_stable=True,
+    #     support_surface_ratio=0.75,
+    #     binding=[],
+    #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
+    #     gap_on=False,
+    #     gap=0,
+    # ):
+    #     """pack master func"""
+    #     # set decimals
+    #     for bin in self.bins:
+    #         bin.formatNumbers(number_of_decimals)
+
+    #     for item in self.items:
+    #         item.formatNumbers(number_of_decimals)
+    #     # add binding attribute
+    #     self.binding = binding
+    #     # Bin : sorted by volumn
+    #     self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+    #     # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
+    #     self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+    #     # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
+    #     self.items.sort(key=lambda item: item.loadbear, reverse=True)
+    #     self.items.sort(key=lambda item: item.level, reverse=True)
+
+    #     # sorted by binding
+    #     if binding != []:
+    #         self.sortBinding(bin)
+
+    #     for idx, bin in enumerate(self.bins):
+
+    #         # pack item to bin
+    #         bin.gap = int(gap) if gap_on == True else 0
+    #         for item in self.items:
+    #             # print(gap_on)
+    #             item.gap = int(gap) if gap_on == True else 0
+    #             # print(item.gap)
+
+    #             self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
+
+    #         if binding != []:
+    #             # resorted
+    #             self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+    #             self.items.sort(key=lambda item: item.loadbear, reverse=True)
+    #             self.items.sort(key=lambda item: item.level, reverse=True)
+
+    #             # clear bin
+    #             bin.items = []
+    #             bin.unfitted_items = self.unfit_items
+    #             bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+    #             # repacking
+    #             for item in self.items:
+    #                 self.pack2Bin(
+    #                     bin, item, fix_point, check_stable, support_surface_ratio
+    #                 )
+
+    #         # Deviation Of Cargo Gravity Center
+    #         self.bins[idx].gravity = self.gravityCenter(bin)
+
+    #         if distribute_items:
+    #             for bitem in bin.items:
+    #                 no = bitem.partno
+    #                 for item in self.items:
+    #                     if item.partno == no:
+    #                         self.items.remove(item)
+    #                         break
+
+    #     # put order of items
+    #     self.putOrder()
+
+    #     if self.items != []:
+    #         self.unfit_items = copy.deepcopy(self.items)
+    #         self.items = []
+    #     # for item in self.items.copy():
+    #     #     if item in bin.unfitted_items:
+    #     #         self.items.remove(item)
+
+    def combinations(self, object_counter, bin_counter):
+        if object_counter == 0:
+            return [[]]  # a list containing one empty list
+        result = []  # initialize an empty list to store the results
+        for i in range(bin_counter):  # iterate over the range of bins
+            sub_results = self.combinations(
+                object_counter - 1, bin_counter
+            )  # recursive call
+            for (
+                sub_result
+            ) in sub_results:  # iterate over the results from the recursive call
+                result.append([i] + sub_result)  # prepend the current bin to the result
+        return result
+
+    # def pack(
+    #     self,
+    #     bigger_first=False,
+    #     distribute_items=True,
+    #     fix_point=True,
+    #     check_stable=True,
+    #     support_surface_ratio=0.75,
+    #     binding=[],
+    #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
+    #     gap_on=False,
+    #     gap=0,
+    #     use_combinations=False,  # New parameter to use combinations
+    # ):
+    #     """pack master func"""
+    #     # set decimals
+    #     for bin in self.bins:
+    #         bin.formatNumbers(number_of_decimals)
+
+    #     for item in self.items:
+    #         item.formatNumbers(number_of_decimals)
+    #     # add binding attribute
+    #     self.binding = binding
+    #     # Bin : sorted by volume
+    #     self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+    #     # Item : sorted by volume -> sorted by loadbear -> sorted by level -> binding
+    #     self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+    #     self.items.sort(key=lambda item: item.loadbear, reverse=True)
+    #     self.items.sort(key=lambda item: item.level, reverse=False)
+
+    #     if binding != []:
+    #         self.sortBinding(bin)
+
+    #     if use_combinations:
+    #         bin_count = len(self.bins)
+    #         item_count = len(self.items)
+    #         all_combinations = self.combinations(item_count, bin_count)
+
+    #         best_combination = None
+    #         best_utilization = 0
+
+    #         for combination in all_combinations:
+    #             for idx, bin in enumerate(self.bins):
+    #                 bin.clearBin()  # Reset the bin
+
+    #             for item_index, bin_index in enumerate(combination):
+    #                 self.pack2Bin(
+    #                     self.bins[bin_index],
+    #                     self.items[item_index],
+    #                     fix_point,
+    #                     check_stable,
+    #                     support_surface_ratio,
+    #                 )
+
+    #             current_utilization = (
+    #                 sum(bin.getUtilization() for bin in self.bins) / bin_count
+    #             )
+    #             if current_utilization > best_utilization:
+    #                 best_utilization = current_utilization
+    #                 best_combination = combination
+
+    #         if best_combination:
+    #             for idx, bin in enumerate(self.bins):
+    #                 bin.clearBin()
+    #             for item_index, bin_index in enumerate(best_combination):
+    #                 self.pack2Bin(
+    #                     self.bins[bin_index],
+    #                     self.items[item_index],
+    #                     fix_point,
+    #                     check_stable,
+    #                     support_surface_ratio,
+    #                 )
+
+    #     else:
+    #         for idx, bin in enumerate(self.bins):
+    #             bin.gap = int(gap) if gap_on else 0
+    #             for item in self.items:
+    #                 item.gap = int(gap) if gap_on else 0
+    #                 self.pack2Bin(
+    #                     bin, item, fix_point, check_stable, support_surface_ratio
+    #                 )
+
+    #             if binding != []:
+    #                 self.items.sort(
+    #                     key=lambda item: item.getVolume(), reverse=bigger_first
+    #                 )
+    #                 self.items.sort(key=lambda item: item.loadbear, reverse=True)
+
+    #                 bin.items = []
+    #                 bin.unfitted_items = self.unfit_items
+    #                 bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+    #                 for item in self.items:
+    #                     self.pack2Bin(
+    #                         bin, item, fix_point, check_stable, support_surface_ratio
+    #                     )
+
+    #             self.bins[idx].gravity = self.gravityCenter(bin)
+
+    #             if distribute_items:
+    #                 for bitem in bin.items:
+    #                     no = bitem.partno
+    #                     for item in self.items:
+    #                         if item.partno == no:
+    #                             self.items.remove(item)
+    #                             break
+
+    #     self.putOrder()
+
+    #     if self.items:
+    #         self.unfit_items = copy.deepcopy(self.items)
+    #         self.items = []
+
+    def _initialize(self, number_of_decimals, binding, bigger_first):
+        """
+        Initializes bins and items, formats numbers, sorts based on criteria, and applies binding if provided.
+        """
+        # Set the decimal format for bins and items
+        for bin in self.bins:
+            bin.formatNumbers(number_of_decimals)
+
+        for item in self.items:
+            item.formatNumbers(number_of_decimals)
+
+        # Store the binding parameter
+        self.binding = binding
+
+        # Sort bins and items based on the specified criteria
+        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+
+        # Sort items based on multiple criteria: level (asc), loadbear (desc), volume (desc)
+        self.items.sort(
+            key=lambda item: (item.level, -item.loadbear, -item.getVolume())
+        )
+
+        # If binding is provided, sort the bins accordingly
+        if binding:
+            self.sortBinding(binding)
+
+    def _pack_using_combinations(self, fix_point, check_stable, support_surface_ratio):
+        """
+        Logic for packing using combinations. This approach tries all possible combinations
+        of items in bins to find the one with the best utilization.
+        """
+        bin_count = len(self.bins)
+        item_count = len(self.items)
+
+        # Generate all possible combinations of items and bins
+        all_combinations = self.combinations(item_count, bin_count)
+
+        best_combination = None
+        best_utilization = 0
+
+        for combination in all_combinations:
+            # Clear each bin before attempting a new combination
+            for bin in self.bins:
+                bin.clearBin()
+
+            # Pack items into bins according to the current combination
+            for item_index, bin_index in enumerate(combination):
+                self.pack2Bin(
+                    self.bins[bin_index],
+                    self.items[item_index],
+                    fix_point,
+                    check_stable,
+                    support_surface_ratio,
+                )
+
+            # Calculate current utilization and update best combination if necessary
+            current_utilization = (
+                sum(bin.getUtilization() for bin in self.bins) / bin_count
+            )
+            if current_utilization > best_utilization:
+                best_utilization = current_utilization
+                best_combination = combination
+
+        # Apply the best combination found
+        if best_combination:
+            for bin in self.bins:
+                bin.clearBin()
+
+            for item_index, bin_index in enumerate(best_combination):
+                self.pack2Bin(
+                    self.bins[bin_index],
+                    self.items[item_index],
+                    fix_point,
+                    check_stable,
+                    support_surface_ratio,
+                )
+
+    def _pack_using_greedy(
+        self,
+        fix_point,
+        check_stable,
+        support_surface_ratio,
+        gap_on,
+        gap,
+    ):
+        """
+        Optimized greedy packing with a systematic approach that evaluates the best bin for each item.
+        """
+        for item in self.items:
+            item.gap = int(gap) if gap_on else 0
+            best_bin = None
+            best_utilization = 0
+
+            for bin in self.bins:
+                bin.gap = int(gap) if gap_on else 0
+                original_utilization = bin.getUtilization()
+
+                # Simulate packing without clearing the bin entirely
+                # Create a deep copy of the bin to simulate packing
+                simulated_bin = copy.deepcopy(bin)
+                self.pack2Bin(
+                    simulated_bin, item, fix_point, check_stable, support_surface_ratio
+                )
+                new_utilization = simulated_bin.getUtilization()
+
+                # Compare the utilization with the current best
+                if (
+                    new_utilization > best_utilization
+                    and new_utilization > original_utilization
+                ):
+                    best_utilization = new_utilization
+                    best_bin = bin
+
+            # Pack the item into the best bin found
+            if best_bin:
+                self.pack2Bin(
+                    best_bin, item, fix_point, check_stable, support_surface_ratio
+                )
+        for idx, bin in enumerate(self.bins):
+            self.bins[idx].gravity = self.gravityCenter(bin)
+
+    def _default_packing(
+        self,
+        distribute_items,
+        fix_point,
+        check_stable,
+        support_surface_ratio,
+        gap_on,
+        gap,
+    ):
+        """
+        Default packing logic when neither combinations nor greedy algorithm is used.
+        Items are packed sequentially into bins, considering gaps and distribution if specified.
+        """
+        for idx, bin in enumerate(self.bins):
+            bin.gap = int(gap) if gap_on else 0
+
+            for item in self.items:
+                item.gap = int(gap) if gap_on else 0
+                self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
+
+            if self.binding:
+                # Re-sort items and re-pack considering the binding
+                self.items.sort(key=lambda item: (-item.loadbear, -item.getVolume()))
+
+                bin.items = []
+                bin.unfitted_items = self.unfit_items
+                bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+
+                for item in self.items:
+                    self.pack2Bin(
+                        bin, item, fix_point, check_stable, support_surface_ratio
+                    )
+
+            # Calculate the gravity center for the bin
+            self.bins[idx].gravity = self.gravityCenter(bin)
+
+            if distribute_items:
+                # Distribute items across bins to balance the load
+                self._distributeItemsAcrossBins(bin)
+
+    def _distributeItemsAcrossBins(self, bin):
+        """
+        Helper function to distribute items across bins to balance the load or usage.
+        """
+        for bitem in bin.items:
+            no = bitem.partno
+            for item in self.items:
+                if item.partno == no:
+                    self.items.remove(item)
+                    break
+
     def pack(
         self,
         bigger_first=False,
@@ -1023,69 +1402,35 @@ class Packer:
         number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
         gap_on=False,
         gap=0,
+        use_combinations=False,
+        use_greedy=False,
     ):
-        """pack master func"""
-        # set decimals
-        for bin in self.bins:
-            bin.formatNumbers(number_of_decimals)
+        self._initialize(number_of_decimals, binding, bigger_first)
 
-        for item in self.items:
-            item.formatNumbers(number_of_decimals)
-        # add binding attribute
-        self.binding = binding
-        # Bin : sorted by volumn
-        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
-        # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
-        self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-        # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
-        self.items.sort(key=lambda item: item.loadbear, reverse=True)
-        self.items.sort(key=lambda item: item.level, reverse=False)
-        # sorted by binding
-        if binding != []:
-            self.sortBinding(bin)
+        if use_combinations:
+            self._pack_using_combinations(
+                fix_point, check_stable, support_surface_ratio
+            )
+        elif use_greedy:
+            self._pack_using_greedy(
+                fix_point,
+                check_stable,
+                support_surface_ratio,
+                gap_on,
+                gap,
+            )
+        else:
+            self._default_packing(
+                distribute_items,
+                fix_point,
+                check_stable,
+                support_surface_ratio,
+                gap_on,
+                gap,
+            )
 
-        for idx, bin in enumerate(self.bins):
-            # pack item to bin
-            bin.gap = int(gap) if gap_on == True else 0
-            for item in self.items:
-                # print(gap_on)
-                item.gap = int(gap) if gap_on == True else 0
-                # print(item.gap)
-
-                self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
-
-            if binding != []:
-                # resorted
-                self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-                self.items.sort(key=lambda item: item.loadbear, reverse=True)
-                self.items.sort(key=lambda item: item.level, reverse=False)
-                # clear bin
-                bin.items = []
-                bin.unfitted_items = self.unfit_items
-                bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
-                # repacking
-                for item in self.items:
-                    self.pack2Bin(
-                        bin, item, fix_point, check_stable, support_surface_ratio
-                    )
-
-            # Deviation Of Cargo Gravity Center
-            self.bins[idx].gravity = self.gravityCenter(bin)
-
-            if distribute_items:
-                for bitem in bin.items:
-                    no = bitem.partno
-                    for item in self.items:
-                        if item.partno == no:
-                            self.items.remove(item)
-                            break
-
-        # put order of items
         self.putOrder()
 
-        if self.items != []:
+        if self.items:
             self.unfit_items = copy.deepcopy(self.items)
             self.items = []
-        # for item in self.items.copy():
-        #     if item in bin.unfitted_items:
-        #         self.items.remove(item)
