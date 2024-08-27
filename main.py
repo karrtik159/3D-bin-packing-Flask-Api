@@ -473,15 +473,21 @@ def insert_data():
             if pallet_id:
                 pallet = Pallet.query.get(pallet_id)
                 if not pallet:
-                    return {
-                        "Success": False,
-                        "Message": f"Pallet with ID {pallet_id} not found.",
-                    }, 404
+                    # If pallet is not found, create a new one with the provided data
+                    pallet = Pallet(name=pallet_data.get("name", "Default Pallet"))
+                    db.session.add(pallet)
+                    db.session.commit()  # Save to get the new pallet ID
+
+                    # Update the data with the new pallet ID
+                    pallet_data["id"] = pallet.id
             else:
                 # Create a new pallet if ID is not provided
                 pallet = Pallet(name=pallet_data.get("name", "Default Pallet"))
                 db.session.add(pallet)
                 db.session.commit()  # Save to get the new pallet ID
+
+                # Update the data with the new pallet ID
+                pallet_data["id"] = pallet.id
 
             # Clear existing boxes and items associated with the pallet
             TBox.query.filter_by(pallet_id=pallet.id).delete()
@@ -518,7 +524,8 @@ def insert_data():
             db.session.commit()
             return {
                 "Success": True,
-                "Message": "Data reset and inserted successfully",
+                "Message": "Data reset and inserted successfully in Pallet id : "
+                + str(pallet.id),
             }, 201
 
         except Exception as e:
@@ -554,7 +561,8 @@ def mkResultAPI():
         try:
             # Get selected pallet_id from the form
             pallet_id = request.form.get("pallet_id")
-
+            binding = request.form.getlist("binding")
+            # print(binding)
             # Fetch only the boxes and items associated with the selected pallet
             if pallet_id:
                 selected_pallet = Pallet.query.get(pallet_id)
@@ -567,8 +575,11 @@ def mkResultAPI():
                 selected_items = TItem.query.all()
             # print(selected_boxes,selected_items)
             # Initialize packer with selected boxes and items
-            packer, box, binding = getBoxAndItem(selected_boxes, selected_items)
+            packer, box, binding = getBoxAndItem(
+                selected_boxes, selected_items, binding
+            )
 
+            # print(binding)
             # Get form parameters
             bigger_first = bool(request.form.get("bigger_first"))
             distribute_items = bool(request.form.get("distribute_items"))
@@ -577,7 +588,7 @@ def mkResultAPI():
             gap_on = bool(request.form.get("gap_on"))
             gap = request.form.get("slider_Gap")
             use_greedy = bool(request.form.get("use_greedy"))
-            use_combinations = bool(request.form.get("use_combinations"))
+            use_combinations = False
 
             support_surface_ratio_str = request.form.get("slider")
             support_surface_ratio = (
@@ -595,6 +606,7 @@ def mkResultAPI():
             if len(selected_boxes) > 1:
                 # Number of elements is greater than 1
                 distribute_items = True
+                use_combinations = False
                 print("distribute_items = ", distribute_items)
 
         except Exception as e:
@@ -701,6 +713,8 @@ def Standalone_mkResultAPI():
         try:
             # Get selected pallet_id from the form
             pallet_id = request.form.get("pallet_id")
+            binding = request.form.getlist("binding")
+            # print(binding)
 
             # Fetch only the boxes and items associated with the selected pallet
             if pallet_id:
@@ -715,7 +729,7 @@ def Standalone_mkResultAPI():
             # print(selected_boxes,selected_items)
             # Initialize packer with selected boxes and items
             packer, box, binding = standard_getBoxAndItem(
-                selected_boxes, selected_items
+                selected_boxes, selected_items, binding
             )
 
             # Get form parameters
@@ -750,6 +764,7 @@ def Standalone_mkResultAPI():
 
         # try:
         sample = []
+
         # Pack using the parameters from the form
         packer.pack(
             bigger_first=bigger_first,

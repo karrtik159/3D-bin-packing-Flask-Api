@@ -1,0 +1,171 @@
+{
+    "pallet": [
+        {
+            "id": "12",
+            "name": "Container 12"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                40,
+                45,
+                45
+            ],
+            "weight": 100,
+            "corner": 0,
+            "pallet": "12",
+            "openTop": 0
+        },
+        {
+            "name": "Pallet 2",
+            "WHD": [
+                100,
+                100,
+                100
+            ],
+            "weight": 1000,
+            "corner": 0,
+            "pallet": "12",
+            "openTop": 0
+        }
+    ],
+    "item": [
+        {
+            "name": "Drawer10Base40",
+            "WHD": [
+                40,
+                58.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "yellow",
+            "pallet": "12"
+        },
+        {
+            "name": "Pantry",
+            "WHD": [
+                15,
+                58.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "olive",
+            "pallet": "12"
+        },
+        {
+            "name": "Freezer",
+            "WHD": [
+                23.9,
+                59.1,
+                24.8
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "brown",
+            "pallet": "12"
+        },
+        {
+            "name": "CornerCabinet",
+            "WHD": [
+                22,
+                23,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "pink",
+            "pallet": "12"
+        },
+        {
+            "name": "Drawer5Base40",
+            "WHD": [
+                40,
+                36.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "olive",
+            "pallet": "12"
+        },
+        {
+            "name": "Door2Base62",
+            "WHD": [
+                62,
+                36.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "pink",
+            "pallet": "12"
+        },
+        {
+            "name": "TallCabinet",
+            "WHD": [
+                40,
+                81.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "yellow",
+            "pallet": "12"
+        },
+        {
+            "name": "LeftLocker",
+            "WHD": [
+                20,
+                81.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "olive",
+            "pallet": "12"
+        },
+        {
+            "name": "RightLocker",
+            "WHD": [
+                20,
+                81.5,
+                22
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 100,
+            "color": "brown",
+            "pallet": "12"
+        }
+    ]
+}

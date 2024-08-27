@@ -98,7 +98,7 @@ def makeDictItem(item):
     return r
 
 
-def getBoxAndItem(selected_boxes, selected_items):
+def getBoxAndItem(selected_boxes, selected_items, binding):
     try:
         packer = exp_packer()
 
@@ -156,7 +156,8 @@ def getBoxAndItem(selected_boxes, selected_items):
                 packer.addItem(item)
 
         # Assuming binding data is optional or not used in this context
-        binding = []
+        # binding = []
+        packer.binding = binding
 
         return packer, box, binding
 
@@ -171,7 +172,7 @@ def getBoxAndItem(selected_boxes, selected_items):
         raise
 
 
-def standard_getBoxAndItem(selected_boxes, selected_items):
+def standard_getBoxAndItem(selected_boxes, selected_items, binding):
     try:
         packer = Packer()
 
@@ -229,7 +230,7 @@ def standard_getBoxAndItem(selected_boxes, selected_items):
                 packer.addItem(item)
 
         # Assuming binding data is optional or not used in this context
-        binding = []
+        # binding = []
 
         return packer, box, binding
 

@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import itertools
 from .constants import RotationType, Axis
@@ -15,9 +16,60 @@ import copy
 
 DEFAULT_NUMBER_OF_DECIMALS = 0
 START_POSITION = [0, 0, 0]
+ROTATION_DIMENSIONS = {
+    RotationType.RT_WHD: lambda self: [
+        self.width + self.gap,
+        self.height + self.gap,
+        self.depth + self.gap,
+    ],
+    RotationType.RT_HWD: lambda self: [
+        self.height + self.gap,
+        self.width + self.gap,
+        self.depth + self.gap,
+    ],
+    RotationType.RT_HDW: lambda self: [
+        self.height + self.gap,
+        self.depth + self.gap,
+        self.width + self.gap,
+    ],
+    RotationType.RT_DHW: lambda self: [
+        self.depth + self.gap,
+        self.height + self.gap,
+        self.width + self.gap,
+    ],
+    RotationType.RT_DWH: lambda self: [
+        self.depth + self.gap,
+        self.width + self.gap,
+        self.height + self.gap,
+    ],
+    RotationType.RT_WDH: lambda self: [
+        self.width + self.gap,
+        self.depth + self.gap,
+        self.height + self.gap,
+    ],
+}
 
 
 class Item:
+    __slots__ = (
+        "partno",
+        "name",
+        "width",
+        "height",
+        "depth",
+        "weight",
+        "level",
+        "loadbear",
+        "updown",
+        "valid_rotations",
+        "color",
+        "rotation_type",
+        "position",
+        "number_of_decimals",
+        "gap",
+        "_volume",
+        "_max_area",
+    )
 
     def __init__(
         self, partno, name, WHD, weight, level, loadbear=9999, updown=1, color=1
@@ -47,6 +99,9 @@ class Item:
         # self.gap_on = False
         self.gap = 0
 
+        self._volume = None
+        self._max_area = None
+
     def formatNumbers(self, number_of_decimals):
         """ """
         self.width = set2Decimal(self.width, number_of_decimals)
@@ -70,62 +125,26 @@ class Item:
 
     def getVolume(self):
         """ """
-        return set2Decimal(
-            self.width * self.height * self.depth, self.number_of_decimals
-        )
+        if self._volume is None:
+            self._volume = set2Decimal(
+                self.width * self.height * self.depth, self.number_of_decimals
+            )
+        return self._volume
 
     def getMaxArea(self):
         """ """
-        a = (
-            sorted([self.width, self.height, self.depth], reverse=True)
-            if self.updown == True
-            else [self.width, self.height, self.depth]
-        )
-
-        return set2Decimal(a[0] * a[1], self.number_of_decimals)
+        if self._max_area is None:
+            a = (
+                sorted([self.width, self.height, self.depth], reverse=True)
+                if self.updown
+                else [self.width, self.height, self.depth]
+            )
+            self._max_area = set2Decimal(a[0] * a[1], self.number_of_decimals)
+        return self._max_area
 
     def getDimension(self):
         """rotation type"""
-        if self.rotation_type == RotationType.RT_WHD:
-            dimension = [
-                self.width + self.gap,
-                self.height + self.gap,
-                self.depth + self.gap,
-            ]
-        elif self.rotation_type == RotationType.RT_HWD:
-            dimension = [
-                self.height + self.gap,
-                self.width + self.gap,
-                self.depth + self.gap,
-            ]
-        elif self.rotation_type == RotationType.RT_HDW:
-            dimension = [
-                self.height + self.gap,
-                self.depth + self.gap,
-                self.width + self.gap,
-            ]
-        elif self.rotation_type == RotationType.RT_DHW:
-            dimension = [
-                self.depth + self.gap,
-                self.height + self.gap,
-                self.width + self.gap,
-            ]
-        elif self.rotation_type == RotationType.RT_DWH:
-            dimension = [
-                self.depth + self.gap,
-                self.width + self.gap,
-                self.height + self.gap,
-            ]
-        elif self.rotation_type == RotationType.RT_WDH:
-            dimension = [
-                self.width + self.gap,
-                self.depth + self.gap,
-                self.height + self.gap,
-            ]
-        else:
-            dimension = []
-
-        return dimension
+        return ROTATION_DIMENSIONS.get(self.rotation_type, lambda self: [])(self)
 
     def _plot(self, color, figure: Type[go.Figure] = None) -> Type[go.Figure]:
         """Adds the plot of a box to a given figure
@@ -238,14 +257,34 @@ class Item:
 
 
 class Bin:
+    __slots__ = (
+        "partno",
+        "position",
+        "width",
+        "height",
+        "depth",
+        "max_weight",
+        "corner",
+        "total_items",
+        "items",
+        "fit_items",
+        "unfitted_items",
+        "number_of_decimals",
+        "fix_point",
+        "check_stable",
+        "support_surface_ratio",
+        "put_type",
+        "gap",
+        "distances",
+        "gravity",
+        "_volume",
+    )
 
     def __init__(self, partno, WHD, max_weight, corner=0, put_type=1):
         """ """
         self.partno = partno
         self.position = START_POSITION
-        self.width = WHD[0]
-        self.height = WHD[1]
-        self.depth = WHD[2]
+        self.width, self.height, self.depth = WHD
         self.max_weight = max_weight
         self.corner = corner
         self.total_items = 0  # number of total items in one bin
@@ -263,6 +302,8 @@ class Bin:
 
         # used to put gravity distribution
         self.gravity = []
+
+        self._volume = None
 
     def formatNumbers(self, number_of_decimals):
         """ """
@@ -285,9 +326,11 @@ class Bin:
 
     def getVolume(self):
         """ """
-        return set2Decimal(
-            self.width * self.height * self.depth, self.number_of_decimals
-        )
+        if self._volume is None:
+            return set2Decimal(
+                self.width * self.height * self.depth, self.number_of_decimals
+            )
+        return self._volume
 
     def getTotalWeight(self):
         """ """
@@ -674,7 +717,7 @@ class Bin:
         # If there are valid rotations, select the one with the best criteria
         if valid_rotations:
             # Sort by minimum distance first (in descending order) and then by surface ratio (in ascending order)
-            valid_rotations.sort(key=lambda x: (x[2]))
+            valid_rotations.sort(key=lambda x: (-x[1], x[2]))
             return [valid_rotations[0][0]]
 
         return []
@@ -790,6 +833,218 @@ class Bin:
         # print(self.distances)
         return figure
 
+    # def _plot(self, figure: Type[go.Figure] = None) -> Type[go.Figure]:
+    #     """Adds the plot of a container with its boxes to a given figure, including a pallet below the box.
+
+    #     Parameters
+    #     ----------
+    #     figure: go.Figure, default = None
+    #         A plotly figure where the box and pallet should be plotted.
+    #     Returns
+    #     -------
+    #         go.Figure
+    #     """
+    #     if figure is None:
+    #         figure = go.Figure()
+
+    #     def add_pallet_to_figure(
+    #         figure,
+    #         position,
+    #         size,
+    #         slat_thickness=0.05,
+    #         slat_spacing=set2Decimal(0.05, 1),
+    #     ):
+    #         """Adds a pallet-like structure to the figure."""
+    #         width, depth, height = size
+    #         x0, y0, z0 = position
+
+    #         # Number of slats based on the depth and spacing
+    #         num_slats = int(depth // slat_spacing)
+    #         slat_width = (depth - (num_slats - 1) * slat_spacing) / num_slats
+
+    #         # Define pallet slats
+    #         for i in range(num_slats):
+    #             slat_z = z0 + height
+    #             slat_y_start = y0 + i * (slat_width + slat_spacing)
+    #             slat_y_end = slat_y_start + slat_width
+
+    #             # Vertices for each slat
+    #             slat_vertices = [
+    #                 [x0, slat_y_start, slat_z],
+    #                 [x0 + width, slat_y_start, slat_z],
+    #                 [x0, slat_y_end, slat_z],
+    #                 [x0 + width, slat_y_end, slat_z],
+    #             ]
+
+    #             # Add edges to the plot
+    #             for m in range(len(slat_vertices)):
+    #                 for n in range(m + 1, len(slat_vertices)):
+    #                     figure.add_trace(
+    #                         go.Scatter3d(
+    #                             x=[slat_vertices[m][0], slat_vertices[n][0]],
+    #                             y=[slat_vertices[m][1], slat_vertices[n][1]],
+    #                             z=[slat_vertices[m][2], slat_vertices[n][2]],
+    #                             mode="lines",
+    #                             line=dict(color="brown", width=4),
+    #                             showlegend=False,
+    #                         )
+    #                     )
+
+    #         # Add supporting blocks and runners
+    #         block_width = width * set2Decimal(10, 1)
+    #         runner_height = height * set2Decimal(15, 1)
+
+    #         # Positions for blocks
+    #         block_positions = [
+    #             (x0, y0, z0),
+    #             (x0 + width - block_width, y0, z0),
+    #             (x0, y0 + depth - slat_width, z0),
+    #             (x0 + width - block_width, y0 + depth - slat_width, z0),
+    #         ]
+
+    #         # Add the blocks
+    #         for bx, by, bz in block_positions:
+    #             block_vertices = generate_vertices(
+    #                 [block_width, slat_width, runner_height], [bx, by, bz], gap=0
+    #             ).T
+    #             bx, by, bz = (
+    #                 block_vertices[0, :],
+    #                 block_vertices[1, :],
+    #                 block_vertices[2, :],
+    #             )
+    #             for m in range(len(bx)):
+    #                 for n in range(m + 1, len(bx)):
+    #                     figure.add_trace(
+    #                         go.Scatter3d(
+    #                             x=[bx[m], bx[n]],
+    #                             y=[by[m], by[n]],
+    #                             z=[bz[m], bz[n]],
+    #                             mode="lines",
+    #                             line=dict(color="black", width=3),
+    #                             showlegend=False,
+    #                         )
+    #                     )
+
+    #         return figure
+
+    #     # Add the pallet below the main box
+    #     pallet_position = [
+    #         self.position[0],
+    #         self.position[1],
+    #         self.position[2] - set2Decimal(5, 2),
+    #     ]  # Position just below the box
+    #     pallet_size = [
+    #         self.width,
+    #         self.height,
+    #         set2Decimal(0.2, 2),
+    #     ]  # Adjust size as needed
+    #     figure = add_pallet_to_figure(figure, pallet_position, pallet_size)
+
+    #     # Generate vertices and edge pairs for the main box
+    #     vertices = generate_vertices(
+    #         [self.width, self.height, self.depth], self.position, self.gap
+    #     ).T
+    #     x, y, z = vertices[0, :], vertices[1, :], vertices[2, :]
+    #     edge_pairs = [
+    #         (0, 1),
+    #         (0, 2),
+    #         (0, 4),
+    #         (1, 3),
+    #         (1, 5),
+    #         (2, 3),
+    #         (2, 6),
+    #         (3, 7),
+    #         (4, 5),
+    #         (4, 6),
+    #         (5, 7),
+    #         (6, 7),
+    #     ]
+
+    #     # Add a line between each pair of edges to the figure
+    #     for m, n in edge_pairs:
+    #         vert_x = np.array([x[m], x[n]])
+    #         vert_y = np.array([y[m], y[n]])
+    #         vert_z = np.array([z[m], z[n]])
+    #         figure.add_trace(
+    #             go.Scatter3d(
+    #                 x=vert_x,
+    #                 y=vert_y,
+    #                 z=vert_z,
+    #                 mode="lines",
+    #                 line=dict(color="yellow", width=3),
+    #                 showlegend=False,
+    #             )
+    #         )
+    #     color_list = px.colors.qualitative.Dark24
+
+    #     for idx, item in enumerate(self.items):
+    #         # Combine the volume and the item's name to create a unique key
+    #         unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
+
+    #         # Select a color based on the unique key
+    #         item_color = color_list[unique_key % len(color_list)]
+
+    #         # Plot the item with the selected color
+    #         figure = item._plot(item_color, figure)
+
+    #     camera = dict(
+    #         up=dict(x=0, y=0, z=1),
+    #         center=dict(x=0, y=0, z=0),
+    #         eye=dict(x=1.25, y=1.25, z=1.25),
+    #     )
+
+    #     # Update figure properties for improved visualization
+    #     figure.update_layout(
+    #         showlegend=True,
+    #         scene_camera=camera,
+    #         width=1600,
+    #         height=900,
+    #         template="plotly_dark",
+    #     )
+    #     max_x = self.position[0] + self.width
+    #     max_y = self.position[1] + self.height
+    #     max_z = self.position[2] + self.depth
+    #     aspect_ratio = dict(
+    #         x=self.width / max([self.width, self.height, self.depth]),
+    #         y=self.height / max([self.width, self.height, self.depth]),
+    #         z=self.depth / max([self.width, self.height, self.depth]),
+    #     )
+    #     figure.update_layout(
+    #         scene=dict(
+    #             xaxis=dict(nticks=int(max_x + 2), range=[0, max_x + 5]),
+    #             yaxis=dict(nticks=int(max_y + 2), range=[0, max_y + 5]),
+    #             zaxis=dict(nticks=int(max_z + 2), range=[0, max_z + 5]),
+    #             # aspectmode="cube",
+    #             aspectratio=aspect_ratio,
+    #         ),
+    #         width=1600,
+    #         margin=dict(r=10, l=10, b=10, t=10),
+    #     )
+    #     figure.update_scenes(
+    #         xaxis_showgrid=True, yaxis_showgrid=True, zaxis_showgrid=True
+    #     )
+    #     figure.update_scenes(
+    #         xaxis_showticklabels=True,
+    #         yaxis_showticklabels=True,
+    #         zaxis_showticklabels=True,
+    #     )
+    #     return figure
+
+    def canFitItem(self, item):
+        """Check if the item can fit in the bin."""
+        return (
+            item.width <= self.width
+            and item.height <= self.height
+            and item.depth <= self.depth
+        )
+
+    def getRemainingSpace(self, item):
+        """Calculate the remaining space in the bin after placing the item."""
+        remaining_volume = (
+            self.getVolume() - sum(i.getVolume() for i in self.items) - item.getVolume()
+        )
+        return remaining_volume if remaining_volume >= 0 else float("inf")
+
 
 class Packer:
 
@@ -803,6 +1058,17 @@ class Packer:
         # self.apex = []
         self.best_utilization = 0
         self.best_combination = None
+        # self.population_size = population_size
+        # self.generations = generations
+        # self.mutation_rate = mutation_rate
+        # self.crossover_rate = crossover_rate
+
+        self.population_size = 50
+        self.generations = 10
+        self.mutation_rate = 0.05
+        self.crossover_rate = 0.8
+        self.best_fitness = 0
+        self.best_chromosome = None
 
     def addBin(self, bin):
         """ """
@@ -953,9 +1219,69 @@ class Packer:
         r = [area[0][2], area[1][2], area[2][2], area[3][2]]
         result = []
         for i in r:
-            result.append(round(i / sum(r) * 100, 2))
+            try:
+                result.append(round(i / sum(r) * 100, 2))
+            except ZeroDivisionError:
+                result.append(0)
         return result
 
+    # def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
+    #     """
+    #     Packs an item into a bin.
+
+    #     Args:
+    #         bin (Bin): The bin to pack the item into.
+    #         item (Item): The item to be packed.
+    #         fix_point (bool): Whether to fix the item's position at (0, 0, 0).
+    #         check_stable (bool): Whether to check if the bin is stable after packing.
+    #         support_surface_ratio (float): The ratio of the item's support surface to the bin's surface.
+
+    #     Returns:
+    #         None
+
+    #     """
+
+    #     fitted = False
+    #     bin.fix_point = fix_point
+    #     bin.check_stable = check_stable
+    #     bin.support_surface_ratio = support_surface_ratio
+
+    #     # first put item on (0,0,0) , if corner exist ,first add corner in box.
+    #     if bin.corner != 0 and not bin.items:
+    #         corner_lst = bin.addCorner()
+    #         for i in range(len(corner_lst)):
+    #             bin.putCorner(i, corner_lst[i])
+
+    #     elif not bin.items:
+    #         response = bin.putItem(item, item.position, 0)
+
+    #         if not response:
+    #             print(item.name, "can't be placed 1")
+    #             bin.unfitted_items.append(item)
+
+    #         return
+
+    #     for axis in range(0, 3):
+    #         items_in_bin = bin.items
+    #         for ib in items_in_bin:
+    #             pivot = [0, 0, 0]
+    #             w, h, d = ib.getDimension()
+    #             if axis == Axis.WIDTH:
+    #                 pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
+    #             elif axis == Axis.HEIGHT:
+    #                 pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
+    #             elif axis == Axis.DEPTH:
+    #                 pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
+
+    #             if bin.putItem(item, pivot, axis):
+    #                 fitted = True
+    #                 break
+    #         if fitted:
+    #             break
+    #     if not fitted:
+    #         print(item.name, "can't be placed 2")
+
+    #         bin.unfitted_items.append(item)
     def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
         """
         Packs an item into a bin.
@@ -969,7 +1295,6 @@ class Packer:
 
         Returns:
             None
-
         """
 
         fitted = False
@@ -977,19 +1302,19 @@ class Packer:
         bin.check_stable = check_stable
         bin.support_surface_ratio = support_surface_ratio
 
-        # first put item on (0,0,0) , if corner exist ,first add corner in box.
+        # first put item on (0,0,0) , if corner exists, first add corner in box.
         if bin.corner != 0 and not bin.items:
             corner_lst = bin.addCorner()
             for i in range(len(corner_lst)):
                 bin.putCorner(i, corner_lst[i])
 
         elif not bin.items:
-            response = bin.putItem(
-                item, START_POSITION, [bin.width, bin.height, bin.depth]
-            )
+            response = bin.putItem(item, item.position, 0)
 
             if not response:
-                bin.unfitted_items.append(item)
+                print(item.name, "can't be placed 1")
+                if item not in bin.unfitted_items:
+                    bin.unfitted_items.append(item)
 
             return
 
@@ -1011,88 +1336,98 @@ class Packer:
             if fitted:
                 break
         if not fitted:
-            bin.unfitted_items.append(item)
 
-    # def OLD_pack(
-    #     self,
-    #     bigger_first=False,
-    #     distribute_items=True,
-    #     fix_point=True,
-    #     check_stable=True,
-    #     support_surface_ratio=0.75,
-    #     binding=[],
-    #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
-    #     gap_on=False,
-    #     gap=0,
-    # ):
-    #     """pack master func"""
-    #     # set decimals
-    #     for bin in self.bins:
-    #         bin.formatNumbers(number_of_decimals)
+            if item not in bin.unfitted_items:
+                print(item.name, "can't be placed 2")
+                bin.unfitted_items.append(item)
 
-    #     for item in self.items:
-    #         item.formatNumbers(number_of_decimals)
-    #     # add binding attribute
-    #     self.binding = binding
-    #     # Bin : sorted by volumn
-    #     self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
-    #     # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
-    #     self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-    #     # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
-    #     self.items.sort(key=lambda item: item.loadbear, reverse=True)
-    #     self.items.sort(key=lambda item: item.level, reverse=True)
+    def pack(
+        self,
+        bigger_first=False,
+        distribute_items=True,
+        fix_point=True,
+        check_stable=True,
+        support_surface_ratio=0.75,
+        binding=[],
+        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
+        gap_on=False,
+        gap=0,
+        use_greedy=False,
+        use_combinations=False,
+    ):
+        """pack master func"""
+        # set decimals
+        for bin in self.bins:
+            bin.formatNumbers(number_of_decimals)
 
-    #     # sorted by binding
-    #     if binding != []:
-    #         self.sortBinding(bin)
+        for item in self.items:
+            item.formatNumbers(number_of_decimals)
+        # add binding attribute
+        self.binding = binding
+        # print(self.binding)
+        # Bin : sorted by volumn
+        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+        # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding
+        self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+        # self.items.sort(key=lambda item: item.getMaxArea(), reverse=bigger_first)
+        self.items.sort(key=lambda item: item.loadbear, reverse=True)
+        self.items.sort(key=lambda item: item.level, reverse=True)
 
-    #     for idx, bin in enumerate(self.bins):
+        # sorted by binding
+        if binding != []:
+            # print("binding")
+            self.sortBinding(bin)
+        # for item in self.items:
+        #     print(item.name)
+        for idx, bin in enumerate(self.bins):
 
-    #         # pack item to bin
-    #         bin.gap = int(gap) if gap_on == True else 0
-    #         for item in self.items:
-    #             # print(gap_on)
-    #             item.gap = int(gap) if gap_on == True else 0
-    #             # print(item.gap)
+            # pack item to bin
+            bin.gap = int(gap) if gap_on == True else 0
+            for item in self.items:
+                # print(gap_on)
+                item.gap = int(gap) if gap_on == True else 0
+                # print(item.gap)
 
-    #             self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
+                self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
 
-    #         if binding != []:
-    #             # resorted
-    #             self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-    #             self.items.sort(key=lambda item: item.loadbear, reverse=True)
-    #             self.items.sort(key=lambda item: item.level, reverse=True)
+            if binding != []:
+                # resorted
+                self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+                self.items.sort(key=lambda item: item.loadbear, reverse=True)
+                self.items.sort(key=lambda item: item.level, reverse=True)
 
-    #             # clear bin
-    #             bin.items = []
-    #             bin.unfitted_items = self.unfit_items
-    #             bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
-    #             # repacking
-    #             for item in self.items:
-    #                 self.pack2Bin(
-    #                     bin, item, fix_point, check_stable, support_surface_ratio
-    #                 )
+                # clear bin
+                bin.items = []
+                bin.unfitted_items = self.unfit_items
+                bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+                # repacking
+                for item in self.items:
+                    self.pack2Bin(
+                        bin, item, fix_point, check_stable, support_surface_ratio
+                    )
 
-    #         # Deviation Of Cargo Gravity Center
-    #         self.bins[idx].gravity = self.gravityCenter(bin)
+            # Deviation Of Cargo Gravity Center
+            try:
+                self.bins[idx].gravity = self.gravityCenter(bin)
+            except Exception as e:
+                pass
+            if distribute_items:
+                for bitem in bin.items:
+                    no = bitem.partno
+                    for item in self.items:
+                        if item.partno == no:
+                            self.items.remove(item)
+                            break
 
-    #         if distribute_items:
-    #             for bitem in bin.items:
-    #                 no = bitem.partno
-    #                 for item in self.items:
-    #                     if item.partno == no:
-    #                         self.items.remove(item)
-    #                         break
+        # put order of items
+        self.putOrder()
 
-    #     # put order of items
-    #     self.putOrder()
-
-    #     if self.items != []:
-    #         self.unfit_items = copy.deepcopy(self.items)
-    #         self.items = []
-    #     # for item in self.items.copy():
-    #     #     if item in bin.unfitted_items:
-    #     #         self.items.remove(item)
+        if self.items != []:
+            self.unfit_items = copy.deepcopy(self.items)
+            self.items = []
+        # for item in self.items.copy():
+        #     if item in bin.unfitted_items:
+        #         self.items.remove(item)
 
     def combinations(self, object_counter, bin_counter):
         if object_counter == 0:
@@ -1119,7 +1454,8 @@ class Packer:
     #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
     #     gap_on=False,
     #     gap=0,
-    #     use_combinations=False,  # New parameter to use combinations
+    #     use_greedy=False,
+    #     use_combinations=Fa,  # New parameter to use combinations
     # ):
     #     """pack master func"""
     #     # set decimals
@@ -1143,7 +1479,9 @@ class Packer:
     #     if use_combinations:
     #         bin_count = len(self.bins)
     #         item_count = len(self.items)
+    #         print("start")
     #         all_combinations = self.combinations(item_count, bin_count)
+    #         print("stop")
 
     #         best_combination = None
     #         best_utilization = 0
@@ -1219,218 +1557,222 @@ class Packer:
     #         self.unfit_items = copy.deepcopy(self.items)
     #         self.items = []
 
-    def _initialize(self, number_of_decimals, binding, bigger_first):
-        """
-        Initializes bins and items, formats numbers, sorts based on criteria, and applies binding if provided.
-        """
-        # Set the decimal format for bins and items
-        for bin in self.bins:
-            bin.formatNumbers(number_of_decimals)
+    # def _initialize(self, number_of_decimals, binding, bigger_first):
+    #     """
+    #     Initializes bins and items, formats numbers, sorts based on criteria, and applies binding if provided.
+    #     """
+    #     # Set the decimal format for bins and items
+    #     for bin in self.bins:
+    #         bin.formatNumbers(number_of_decimals)
 
-        for item in self.items:
-            item.formatNumbers(number_of_decimals)
+    #     for item in self.items:
+    #         item.formatNumbers(number_of_decimals)
 
-        # Store the binding parameter
-        self.binding = binding
+    #     # Store the binding parameter
+    #     self.binding = binding
 
-        # Sort bins and items based on the specified criteria
-        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+    #     # Sort bins and items based on the specified criteria
+    #     self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
 
-        # Sort items based on multiple criteria: level (asc), loadbear (desc), volume (desc)
-        self.items.sort(
-            key=lambda item: (item.level, -item.loadbear, -item.getVolume())
-        )
+    #     # Sort items based on multiple criteria: level (asc), loadbear (desc), volume (desc)
+    #     self.items.sort(
+    #         key=lambda item: (item.level, -item.loadbear, -item.getVolume())
+    #     )
 
-        # If binding is provided, sort the bins accordingly
-        if binding:
-            self.sortBinding(binding)
+    #     # If binding is provided, sort the bins accordingly
+    #     if binding:
+    #         self.sortBinding(binding)
 
-    def _pack_using_combinations(self, fix_point, check_stable, support_surface_ratio):
-        """
-        Logic for packing using combinations. This approach tries all possible combinations
-        of items in bins to find the one with the best utilization.
-        """
-        bin_count = len(self.bins)
-        item_count = len(self.items)
+    # def _pack_using_combinations(self, fix_point, check_stable, support_surface_ratio):
+    #     """
+    #     Logic for packing using combinations. This approach tries all possible combinations
+    #     of items in bins to find the one with the best utilization.
+    #     """
+    #     bin_count = len(self.bins)
+    #     item_count = len(self.items)
 
-        # Generate all possible combinations of items and bins
-        all_combinations = self.combinations(item_count, bin_count)
+    #     # Generate all possible combinations of items and bins
+    #     all_combinations = self.combinations(item_count, bin_count)
 
-        best_combination = None
-        best_utilization = 0
+    #     best_combination = None
+    #     best_utilization = 0
 
-        for combination in all_combinations:
-            # Clear each bin before attempting a new combination
-            for bin in self.bins:
-                bin.clearBin()
+    #     for combination in all_combinations:
+    #         # Clear each bin before attempting a new combination
+    #         for bin in self.bins:
+    #             bin.clearBin()
 
-            # Pack items into bins according to the current combination
-            for item_index, bin_index in enumerate(combination):
-                self.pack2Bin(
-                    self.bins[bin_index],
-                    self.items[item_index],
-                    fix_point,
-                    check_stable,
-                    support_surface_ratio,
-                )
+    #         # Pack items into bins according to the current combination
+    #         for item_index, bin_index in enumerate(combination):
+    #             self.pack2Bin(
+    #                 self.bins[bin_index],
+    #                 self.items[item_index],
+    #                 fix_point,
+    #                 check_stable,
+    #                 support_surface_ratio,
+    #             )
 
-            # Calculate current utilization and update best combination if necessary
-            current_utilization = (
-                sum(bin.getUtilization() for bin in self.bins) / bin_count
-            )
-            if current_utilization > best_utilization:
-                best_utilization = current_utilization
-                best_combination = combination
+    #         # Calculate current utilization and update best combination if necessary
+    #         current_utilization = (
+    #             sum(bin.getUtilization() for bin in self.bins) / bin_count
+    #         )
+    #         if current_utilization > best_utilization:
+    #             best_utilization = current_utilization
+    #             best_combination = combination
 
-        # Apply the best combination found
-        if best_combination:
-            for bin in self.bins:
-                bin.clearBin()
+    #     # Apply the best combination found
+    #     if best_combination:
+    #         for bin in self.bins:
+    #             bin.clearBin()
 
-            for item_index, bin_index in enumerate(best_combination):
-                self.pack2Bin(
-                    self.bins[bin_index],
-                    self.items[item_index],
-                    fix_point,
-                    check_stable,
-                    support_surface_ratio,
-                )
+    #         for item_index, bin_index in enumerate(best_combination):
+    #             self.pack2Bin(
+    #                 self.bins[bin_index],
+    #                 self.items[item_index],
+    #                 fix_point,
+    #                 check_stable,
+    #                 support_surface_ratio,
+    #             )
 
-    def _pack_using_greedy(
-        self,
-        fix_point,
-        check_stable,
-        support_surface_ratio,
-        gap_on,
-        gap,
-    ):
-        """
-        Optimized greedy packing with a systematic approach that evaluates the best bin for each item.
-        """
-        for item in self.items:
-            item.gap = int(gap) if gap_on else 0
-            best_bin = None
-            best_utilization = 0
+    # def _pack_using_greedy(
+    #     self,
+    #     fix_point,
+    #     check_stable,
+    #     support_surface_ratio,
+    #     gap_on,
+    #     gap,
+    # ):
+    #     """
+    #     Optimized greedy packing with a systematic approach that evaluates the best bin for each item.
+    #     """
+    #     for item in self.items:
+    #         item.gap = int(gap) if gap_on else 0
+    #         best_bin = None
+    #         best_utilization = 0
 
-            for bin in self.bins:
-                bin.gap = int(gap) if gap_on else 0
-                original_utilization = bin.getUtilization()
+    #         for bin in self.bins:
+    #             bin.gap = int(gap) if gap_on else 0
+    #             original_utilization = bin.getUtilization()
 
-                # Simulate packing without clearing the bin entirely
-                # Create a deep copy of the bin to simulate packing
-                simulated_bin = copy.deepcopy(bin)
-                self.pack2Bin(
-                    simulated_bin, item, fix_point, check_stable, support_surface_ratio
-                )
-                new_utilization = simulated_bin.getUtilization()
+    #             # Simulate packing without clearing the bin entirely
+    #             # Create a deep copy of the bin to simulate packing
+    #             simulated_bin = copy.deepcopy(bin)
+    #             self.pack2Bin(
+    #                 simulated_bin, item, fix_point, check_stable, support_surface_ratio
+    #             )
+    #             new_utilization = simulated_bin.getUtilization()
 
-                # Compare the utilization with the current best
-                if (
-                    new_utilization > best_utilization
-                    and new_utilization > original_utilization
-                ):
-                    best_utilization = new_utilization
-                    best_bin = bin
+    #             # Compare the utilization with the current best
+    #             if (
+    #                 new_utilization > best_utilization
+    #                 and new_utilization > original_utilization
+    #             ):
+    #                 best_utilization = new_utilization
+    #                 best_bin = bin
 
-            # Pack the item into the best bin found
-            if best_bin:
-                self.pack2Bin(
-                    best_bin, item, fix_point, check_stable, support_surface_ratio
-                )
-        for idx, bin in enumerate(self.bins):
-            self.bins[idx].gravity = self.gravityCenter(bin)
+    #             # Pack the item into the best bin found
+    #             if best_bin:
+    #                 self.pack2Bin(
+    #                     best_bin, item, fix_point, check_stable, support_surface_ratio
+    #                 )
+    #             else:
+    #                 # Append to unfit_items if no suitable bin was found
+    #                 self.unfit_items.append(item)
 
-    def _default_packing(
-        self,
-        distribute_items,
-        fix_point,
-        check_stable,
-        support_surface_ratio,
-        gap_on,
-        gap,
-    ):
-        """
-        Default packing logic when neither combinations nor greedy algorithm is used.
-        Items are packed sequentially into bins, considering gaps and distribution if specified.
-        """
-        for idx, bin in enumerate(self.bins):
-            bin.gap = int(gap) if gap_on else 0
+    # def _default_packing(
+    #     self,
+    #     distribute_items,
+    #     fix_point,
+    #     check_stable,
+    #     support_surface_ratio,
+    #     gap_on,
+    #     gap,
+    # ):
+    #     """
+    #     Default packing logic when neither combinations nor greedy algorithm is used.
+    #     Items are packed sequentially into bins, considering gaps and distribution if specified.
+    #     """
+    #     for idx, bin in enumerate(self.bins):
+    #         bin.gap = int(gap) if gap_on else 0
 
-            for item in self.items:
-                item.gap = int(gap) if gap_on else 0
-                self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
+    #         for item in self.items:
+    #             item.gap = int(gap) if gap_on else 0
+    #             self.pack2Bin(bin, item, fix_point, check_stable, support_surface_ratio)
 
-            if self.binding:
-                # Re-sort items and re-pack considering the binding
-                self.items.sort(key=lambda item: (-item.loadbear, -item.getVolume()))
+    #         if self.binding:
+    #             # Re-sort items and re-pack considering the binding
+    #             self.items.sort(key=lambda item: (-item.loadbear, -item.getVolume()))
 
-                bin.items = []
-                bin.unfitted_items = self.unfit_items
-                bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+    #             bin.items = []
+    #             bin.unfitted_items = self.unfit_items
+    #             bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
 
-                for item in self.items:
-                    self.pack2Bin(
-                        bin, item, fix_point, check_stable, support_surface_ratio
-                    )
+    #             for item in self.items:
+    #                 self.pack2Bin(
+    #                     bin, item, fix_point, check_stable, support_surface_ratio
+    #                 )
 
-            # Calculate the gravity center for the bin
-            self.bins[idx].gravity = self.gravityCenter(bin)
+    #         # Calculate the gravity center for the bin
+    #         self.bins[idx].gravity = self.gravityCenter(bin)
 
-            if distribute_items:
-                # Distribute items across bins to balance the load
-                self._distributeItemsAcrossBins(bin)
+    #         if distribute_items:
+    #             # Distribute items across bins to balance the load
+    #             self._distributeItemsAcrossBins(bin)
 
-    def _distributeItemsAcrossBins(self, bin):
-        """
-        Helper function to distribute items across bins to balance the load or usage.
-        """
-        for bitem in bin.items:
-            no = bitem.partno
-            for item in self.items:
-                if item.partno == no:
-                    self.items.remove(item)
-                    break
+    # def _distributeItemsAcrossBins(self, bin):
+    #     """
+    #     Helper function to distribute items across bins to balance the load or usage.
+    #     """
+    #     for bitem in bin.items:
+    #         no = bitem.partno
+    #         for item in self.items:
+    #             if item.partno == no:
+    #                 self.items.remove(item)
+    #                 break
 
-    def pack(
-        self,
-        bigger_first=False,
-        distribute_items=True,
-        fix_point=True,
-        check_stable=True,
-        support_surface_ratio=0.75,
-        binding=[],
-        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
-        gap_on=False,
-        gap=0,
-        use_combinations=False,
-        use_greedy=False,
-    ):
-        self._initialize(number_of_decimals, binding, bigger_first)
+    # def pack(
+    #     self,
+    #     bigger_first=False,
+    #     distribute_items=True,
+    #     fix_point=True,
+    #     check_stable=True,
+    #     support_surface_ratio=0.75,
+    #     binding=[],
+    #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
+    #     gap_on=False,
+    #     gap=0,
+    #     use_combinations=False,
+    #     use_greedy=False,
+    # ):
+    #     self._initialize(number_of_decimals, binding, bigger_first)
 
-        if use_combinations:
-            self._pack_using_combinations(
-                fix_point, check_stable, support_surface_ratio
-            )
-        elif use_greedy:
-            self._pack_using_greedy(
-                fix_point,
-                check_stable,
-                support_surface_ratio,
-                gap_on,
-                gap,
-            )
-        else:
-            self._default_packing(
-                distribute_items,
-                fix_point,
-                check_stable,
-                support_surface_ratio,
-                gap_on,
-                gap,
-            )
+    #     if use_combinations:
+    #         self._pack_using_combinations(
+    #             fix_point, check_stable, support_surface_ratio
+    #         )
+    #     elif use_greedy:
+    #         self._pack_using_greedy(
+    #             fix_point,
+    #             check_stable,
+    #             support_surface_ratio,
+    #             gap_on,
+    #             gap,
+    #         )
 
-        self.putOrder()
+    #     else:
+    #         self._default_packing(
+    #             distribute_items,
+    #             fix_point,
+    #             check_stable,
+    #             support_surface_ratio,
+    #             gap_on,
+    #             gap,
+    #         )
 
-        if self.items:
-            self.unfit_items = copy.deepcopy(self.items)
-            self.items = []
+    #     self.putOrder()
+    #     for idx, bin in enumerate(self.bins):
+    #         self.bins[idx].gravity = self.gravityCenter(bin)
+
+    #     if self.items:
+    #         self.unfit_items = copy.deepcopy(self.items)
+    #         self.items = []

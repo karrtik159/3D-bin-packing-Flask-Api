@@ -774,7 +774,7 @@ class Packer:
                 ):
                     y = len(y_set & area[j][1]) / (y_ed - y_st) * int(i.weight)
                     area[j][2] += y
-                    x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
+                    # x = len(x_set & area[j][0]) / (x_ed - x_st) * int(i.weight)
                     if j >= 2:
                         area[j - 2][2] += int(i.weight) - x
                     else:
@@ -838,6 +838,7 @@ class Packer:
             item.formatNumbers(number_of_decimals)
         # add binding attribute
         self.binding = binding
+        # print(self.binding)
         # Bin : sorted by volumn
         self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
         # Item : sorted by volumn -> sorted by loadbear -> sorted by level -> binding

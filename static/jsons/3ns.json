@@ -1,0 +1,84 @@
+{
+    "pallet": [
+        {
+            "id": "13",
+            "name": "Container 13"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                589.8,
+                243.8,
+                259.1
+            ],
+            "weight": 28080,
+            "corner": 15,
+            "pallet": "13",
+            "openTop": 0
+        }
+    ],
+    "item": [
+        {
+            "name": "Microwave Oven",
+            "WHD": [
+                50,
+                30,
+                40
+            ],
+            "count": 30,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 18,
+            "color": 1,
+            "pallet": "13"
+        },
+        {
+            "name": "Refrigerator",
+            "WHD": [
+                70,
+                80,
+                200
+            ],
+            "count": 10,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 150,
+            "color": 2,
+            "pallet": "13"
+        },
+        {
+            "name": "Dishwasher",
+            "WHD": [
+                60,
+                60,
+                85
+            ],
+            "count": 20,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 45,
+            "color": 3,
+            "pallet": "13"
+        },
+        {
+            "name": "Air Conditioner Unit",
+            "WHD": [
+                80,
+                60,
+                40
+            ],
+            "count": 25,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 65,
+            "color": 4,
+            "pallet": "13"
+        }
+    ]
+}

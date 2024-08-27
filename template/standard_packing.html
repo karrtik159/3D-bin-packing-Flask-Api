@@ -51,14 +51,14 @@
         <label class="form-check-label" for="check_stable">Check stability of the packing.</label>
       </div>
       <!-- Multiple select for binding -->
-      <div class="form-group mb-4">
+      <!-- <div class="form-group mb-4">
         <label for="binding" class="form-label">Binding:</label>
         <select multiple class="form-control" id="binding" name="binding[]">
           {% for item in items %}
             <option value="{{ item.name }}" data-pallet-id="{{ item.pallet_id }}">{{ item.name }}</option>
           {% endfor %}
         </select>
-      </div>
+      </div> -->
       <!-- Slider for support_surface_ratio -->
       <div class="form-group mb-4">
         <label for="slider" class="form-label">
@@ -82,8 +82,8 @@
                class="form-control"
                id="number_of_decimals"
                name="number_of_decimals"
-               value="0"
-               min="0"
+               value="1"
+               min="1"
                step="1">
       </div>
       <!-- Checkbox for gap_on -->
