@@ -1,0 +1,54 @@
+{
+    "pallet": [
+        {
+            "id": "7",
+            "name": "Container 7"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                4.0,
+                4.0,
+                4.0
+            ],
+            "weight": 100,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "7"
+        }
+    ],
+    "item": [
+        {
+            "name": "Kiste 2*2*2",
+            "WHD": [
+                2.0,
+                2.0,
+                2.0
+            ],
+            "count": 7,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "7"
+        },
+        {
+            "name": "Kiste 1*1*1",
+            "WHD": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "count": 8,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "7"
+        }
+    ]
+}

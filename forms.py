@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+import matplotlib.colors as mcolors
 from wtforms import StringField, IntegerField, SelectField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, InputRequired
 
@@ -68,18 +69,16 @@ class ItemForm(FlaskForm):
             NumberRange(min=1, message="Weight must be at least 1."),
         ],
     )
+
+    # Get a list of color names from matplotlib
+    color_names = list(mcolors.CSS4_COLORS.keys())
+
+    color_choices = [(color, color.capitalize()) for color in color_names]
+
     color = SelectField(
         "Color",
-        choices=[
-            (1, "Red"),
-            (2, "Blue"),
-            (3, "Green"),
-            (4, "Yellow"),
-            (5, "Black"),
-            (6, "White"),
-            (7, "Brown"),
-        ],
-        coerce=int,
+        choices=color_choices,
+        coerce=str,
         validators=[InputRequired(message="Color selection is required.")],
     )
     pallet_id = SelectField(

@@ -147,9 +147,8 @@ def getBoxAndItem(selected_boxes, selected_items, binding):
                     level=int(item_data.level),
                     loadbear=item_data.loadbear,
                     updown=bool(item_data.updown),
-                    color=color_dict.get(
-                        item_data.color, "gray"
-                    ),  # Default to 'gray' if color not found
+                    color=item_data.color,
+                    # Default to 'gray' if color not found
                 )
 
                 # Add the Item object to the packer
@@ -177,15 +176,15 @@ def standard_getBoxAndItem(selected_boxes, selected_items, binding):
         packer = Packer()
 
         # Dictionary to map color codes to color names
-        color_dict = {
-            1: "red",
-            2: "yellow",
-            3: "blue",
-            4: "green",
-            5: "purple",
-            6: "brown",
-            7: "orange",
-        }
+        # color_dict = {
+        #     1: "red",
+        #     2: "yellow",
+        #     3: "blue",
+        #     4: "green",
+        #     5: "purple",
+        #     6: "brown",
+        #     7: "orange",
+        # }
 
         # Process each selected box
         for box_data in selected_boxes:
@@ -221,9 +220,8 @@ def standard_getBoxAndItem(selected_boxes, selected_items, binding):
                     level=int(item_data.level),
                     loadbear=item_data.loadbear,
                     updown=bool(item_data.updown),
-                    color=color_dict.get(
-                        item_data.color, "gray"
-                    ),  # Default to 'gray' if color not found
+                    color=item_data.color or "gray",
+                    # Default to 'gray' if color not found
                 )
 
                 # Add the Item object to the packer

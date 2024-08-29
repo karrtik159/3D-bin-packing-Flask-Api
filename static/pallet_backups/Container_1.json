@@ -1,0 +1,69 @@
+{
+    "pallet": [
+        {
+            "id": "1",
+            "name": "Container 1"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                130.0,
+                73.0,
+                62.0
+            ],
+            "weight": 100,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "1"
+        }
+    ],
+    "item": [
+        {
+            "name": "Kiste",
+            "WHD": [
+                62.0,
+                35.0,
+                38.0
+            ],
+            "count": 6,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "1"
+        },
+        {
+            "name": "Ikea T\u00fcte",
+            "WHD": [
+                27.0,
+                15.0,
+                12.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "blue",
+            "pallet": "1"
+        },
+        {
+            "name": "server",
+            "WHD": [
+                70.0,
+                100.0,
+                30.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 500,
+            "weight": 20,
+            "color": "yellow",
+            "pallet": "1"
+        }
+    ]
+}

@@ -1,6 +1,7 @@
 import markdown
-import flask, os, random
+import flask, os, random, json
 from flask_cors import cross_origin
+import pandas as pd
 from py3dbp import Packer, Bin, Item  # , Painter
 from exp_py3dbp import (
     Packer as exp_packer,
@@ -25,7 +26,7 @@ from forms import BoxForm, ItemForm, PalletForm
 
 app = Flask(__name__, template_folder="template", static_folder="static")
 app.config["SECRET_KEY"] = "your_secret_key"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///new_data_exp.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///Containers.db"
 
 db = SQLAlchemy()
 
@@ -137,19 +138,24 @@ def delete_pallet(pallet_id):
 
 @app.route("/add_box", methods=["GET", "POST"])
 def add_box():
+    pallet_id = request.args.get("pallet_id")
     form = BoxForm()
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
-
+    if pallet_id:
+        form.pallet_id.default = (
+            pallet_id  # Set default value to the pallet_id from the URL
+        )
+    form.process()
     if form.validate_on_submit():
+        box = TBox(
+            name=form.name.data,
+            whd=form.whd.data,
+            weight=form.weight.data,
+            openTop=form.openTop.data,
+            corner=form.corner.data,
+            pallet_id=form.pallet_id.data,
+        )
         try:
-            box = TBox(
-                name=form.name.data,
-                whd=form.whd.data,
-                weight=form.weight.data,
-                openTop=form.openTop.data,
-                corner=form.corner.data,
-                pallet_id=form.pallet_id.data,
-            )
             db.session.add(box)
             db.session.commit()
             flash(f"Box {form.name.data} added successfully!", "success")
@@ -169,13 +175,33 @@ def add_box():
 @app.route("/add_item", methods=["GET", "POST"])
 def add_item():
     form = ItemForm()
-
-    # Populate the pallet choices
+    # Load the CSV once when the app starts
     form.pallet_id.choices = [(p.id, p.name) for p in Pallet.query.all()]
+    df = pd.read_csv("./static/Book1.csv")
+    if request.method == "GET":
 
+        pallet_id = request.args.get("pallet_id")
+        # Populate the pallet choices
+        form.pallet_id.default = (
+            pallet_id  # Set default value to the pallet_id from the URL
+        )
+        form.process()  # This processes the form and applies the default value
+        # Sample a random row from the dataframe
+        random_row = df.sample(1).iloc[0]
+        form.name.data = random_row["Item Name"]
+        form.whd.data = [
+            random_row["Width (in)"],
+            random_row["Height (in)"],
+            random_row["Breadth (in)"],
+        ]
+        form.color.default = random_row["Color"]
+        form.count.data = 1
+        form.level.data = 1
+        form.loadbear.data = 100
+        form.weight.data = 1
+    # return render_template("item_form.html", form=form)
     if form.validate_on_submit():
         try:
-            # Create a new item instance with the form data
             item = TItem(
                 name=form.name.data,
                 whd=form.whd.data,
@@ -187,6 +213,7 @@ def add_item():
                 color=form.color.data,
                 pallet_id=form.pallet_id.data,
             )
+            # Create a new item instance with the form data
 
             # Add the item to the database session
             db.session.add(item)
@@ -194,7 +221,7 @@ def add_item():
             # Commit the session to save the item to the database
             db.session.commit()
             flash(f"Item {form.name.data} added!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for("index", pallet_id=form.pallet_id.data))
 
         except Exception as e:
             # Rollback the session in case of an error
@@ -236,7 +263,7 @@ def edit_box(box_id):
             box.pallet_id = form.pallet_id.data
             db.session.commit()
             flash(f"Box {form.name.data} updated!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for("index", pallet_id=box.pallet_id))
 
         except Exception as e:
             db.session.rollback()
@@ -283,7 +310,7 @@ def edit_item(item_id):
 
             db.session.commit()
             flash(f"Item {form.name.data} updated!", "success")
-            return redirect(url_for("index"))
+            return redirect(url_for("index", pallet_id=item.pallet_id))
         except Exception as e:
             db.session.rollback()
             flash(f"An error occurred while updating the item: {str(e)}", "danger")
@@ -299,23 +326,26 @@ def edit_item(item_id):
 @app.route("/delete_box/<int:box_id>", methods=["POST"])
 def delete_box(box_id):
     box = TBox.query.get_or_404(box_id)
+    pallet_id = box.pallet_id
     db.session.delete(box)
     db.session.commit()
     flash("Box deleted!", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("index", pallet_id=pallet_id))
 
 
 @app.route("/delete_item/<int:item_id>", methods=["POST"])
 def delete_item(item_id):
     item = TItem.query.get_or_404(item_id)
+    pallet_id = item.pallet_id
     db.session.delete(item)
     db.session.commit()
     flash("Item deleted!", "success")
-    return redirect(url_for("index"))
+    return redirect(url_for("index", pallet_id=pallet_id))
 
 
 @app.route("/reset_data", methods=["GET", "POST"])
 def reset_data():
+    fetch_and_save_pallet_data()
     data = {
         "pallet": [
             {"name": "Container 1"},
@@ -461,52 +491,59 @@ def insert_data():
 
         try:
             # Validate the existence of pallet data
-            pallet_data = data.get("pallet")[0]
-            if not pallet_data or not isinstance(pallet_data, dict):
+            pallet_data = data.get("pallet", [])
+            if (
+                not pallet_data
+                or not isinstance(pallet_data, list)
+                or not pallet_data[0]
+            ):
                 return {
                     "Success": False,
                     "Message": "Pallet data is missing or invalid.",
                 }, 400
 
-            # Retrieve or create a pallet
+            pallet_data = pallet_data[0]
             pallet_id = pallet_data.get("id")
+
             if pallet_id:
+                # Update existing pallet or create a new one if not found
                 pallet = Pallet.query.get(pallet_id)
-                if not pallet:
-                    # If pallet is not found, create a new one with the provided data
+                if pallet:
+                    pallet.name = pallet_data.get("name", pallet.name)
+                else:
                     pallet = Pallet(name=pallet_data.get("name", "Default Pallet"))
                     db.session.add(pallet)
                     db.session.commit()  # Save to get the new pallet ID
-
-                    # Update the data with the new pallet ID
                     pallet_data["id"] = pallet.id
             else:
                 # Create a new pallet if ID is not provided
                 pallet = Pallet(name=pallet_data.get("name", "Default Pallet"))
                 db.session.add(pallet)
-                db.session.commit()  # Save to get the new pallet ID
-
-                # Update the data with the new pallet ID
+                db.session.commit()
                 pallet_data["id"] = pallet.id
 
-            # Clear existing boxes and items associated with the pallet
-            TBox.query.filter_by(pallet_id=pallet.id).delete()
-            TItem.query.filter_by(pallet_id=pallet.id).delete()
+            # Clear existing boxes and items only if new data is provided
+            if data.get("box"):
+                TBox.query.filter_by(pallet_id=pallet.id).delete()
+
+            if data.get("item"):
+                TItem.query.filter_by(pallet_id=pallet.id).delete()
+
             db.session.commit()
 
-            # Insert new box data associated with the pallet
+            # Insert or update box data associated with the pallet
             for box_data in data.get("box", []):
                 box = TBox(
                     name=box_data["name"],
                     whd=str(box_data["WHD"]),
                     weight=box_data["weight"],
-                    openTop=str(box_data["openTop"]),
+                    openTop=int(box_data["openTop"]),
                     corner=box_data["corner"],
                     pallet_id=pallet.id,
                 )
                 db.session.add(box)
 
-            # Insert new item data associated with the pallet
+            # Insert or update item data associated with the pallet
             for item_data in data.get("item", []):
                 item = TItem(
                     name=item_data["name"],
@@ -524,8 +561,7 @@ def insert_data():
             db.session.commit()
             return {
                 "Success": True,
-                "Message": "Data reset and inserted successfully in Pallet id : "
-                + str(pallet.id),
+                "Message": f"Data reset and inserted successfully in Pallet id: {pallet.id}",
             }, 201
 
         except Exception as e:
@@ -536,11 +572,90 @@ def insert_data():
         # Handling the GET request to load the sample files
         try:
             sample_files = [
-                f for f in os.listdir("static/jsons") if f.endswith(".json")
+                f for f in os.listdir("static/pallet_backups") if f.endswith(".json")
             ]
         except FileNotFoundError:
             sample_files = []
         return render_template("insert_data.html", sample_files=sample_files)
+
+
+def parse_whd(whd_str):
+    # Attempt to clean and convert the WHD string to a list of integers
+    try:
+        # Remove any unwanted characters like brackets and spaces
+        whd_str = whd_str.replace("[", "").replace("]", "").replace(" ", "")
+        return [float(dim) for dim in whd_str.split(",")]
+    except ValueError:
+        # If conversion fails, log an error and return a default value or empty list
+        print(f"Error parsing WHD: {whd_str}")
+        return []
+
+
+def parse_int_field(field_str):
+    # Attempt to clean and convert a string field to an integer
+    try:
+        # Remove any unwanted characters like brackets and spaces
+        field_str = field_str.replace("[", "").replace("]", "").strip()
+        return int(field_str) or float(field_str)
+    except ValueError:
+        # If conversion fails, log an error and return a default value, such as 0
+        print(f"Error parsing integer field: {field_str}")
+        return 0
+
+
+# @app.route("/Backup", methods=["GET", "POST"])
+def fetch_and_save_pallet_data():
+    pallets = Pallet.query.all()
+    backup_dir = "static/pallet_backups"
+
+    # Create backup directory if it doesn't exist
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
+
+    for pallet in pallets:
+        # Fetch all associated boxes and items
+        boxes = TBox.query.filter_by(pallet_id=pallet.id).all()
+        items = TItem.query.filter_by(pallet_id=pallet.id).all()
+
+        # Convert data to match the required JSON structure
+        pallet_data = {
+            "pallet": [{"id": str(pallet.id), "name": str(pallet.name)}],
+            "box": [
+                {
+                    "name": box.name,
+                    # "WHD": [int(dim) for dim in box.whd.split(",")],
+                    "WHD": parse_whd(box.whd),
+                    "weight": box.weight,
+                    "openTop": parse_int_field(box.openTop),
+                    "corner": int(box.corner),
+                    "pallet": str(pallet.id),
+                }
+                for box in boxes
+            ],
+            "item": [
+                {
+                    "name": item.name,
+                    # "WHD": [int(dim) for dim in item.whd.split(",")],
+                    "WHD": parse_whd(item.whd),
+                    "count": item.count,
+                    "updown": item.updown,
+                    "level": item.level,
+                    "loadbear": item.loadbear,
+                    "weight": item.weight,
+                    "color": item.color,
+                    "pallet": str(pallet.id),
+                }
+                for item in items
+            ],
+        }
+
+        # Save to JSON file
+        file_name = f"Container_{pallet.id}.json"
+        file_path = os.path.join(backup_dir, file_name)
+        with open(file_path, "w") as json_file:
+            json.dump(pallet_data, json_file, indent=4)
+
+        # print(f"Backup for Pallet ID {pallet.id} saved to {file_path}")
 
 
 @app.route("/calPacking", methods=["GET", "POST"])
@@ -587,8 +702,8 @@ def mkResultAPI():
             check_stable = bool(request.form.get("check_stable"))
             gap_on = bool(request.form.get("gap_on"))
             gap = request.form.get("slider_Gap")
-            use_greedy = bool(request.form.get("use_greedy"))
-            use_combinations = False
+            use_greedy = False
+            use_combinations = True
 
             support_surface_ratio_str = request.form.get("slider")
             support_surface_ratio = (
@@ -606,7 +721,7 @@ def mkResultAPI():
             if len(selected_boxes) > 1:
                 # Number of elements is greater than 1
                 distribute_items = True
-                use_combinations = False
+                use_combinations = True
                 print("distribute_items = ", distribute_items)
 
         except Exception as e:
@@ -647,7 +762,7 @@ def mkResultAPI():
 
             # Define base directory and plot filename
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            plot_filename = f"plot_{box.partno}.html"
+            plot_filename = f"{selected_pallet.name}_{idx+1}.html"
             plot_filepath = os.path.join(base_dir, "static", "assets", plot_filename)
 
             # Ensure static directory exists
@@ -657,7 +772,7 @@ def mkResultAPI():
             # Save plot to HTML
             fig.write_html(plot_filepath)
 
-            plot_url_name = f"plot_url_{idx}"
+            plot_url_name = f"View Pallet {idx+1}"
             # Make response
             res["Success"] = True
             boxname = f"box_{idx+1}"
@@ -795,7 +910,8 @@ def Standalone_mkResultAPI():
 
             # Define base directory and plot filename
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            plot_filename = f"stnadard_plot_{box.partno}.html"
+            plot_filename = f"Standard_{selected_pallet.name}_{idx+1}.html"
+            # plot_filename = f"stnadard_plot_{box.partno}.html"
             plot_filepath = os.path.join(base_dir, "static", "assets", plot_filename)
 
             # Ensure static directory exists
@@ -805,7 +921,8 @@ def Standalone_mkResultAPI():
             # Save plot to HTML
             fig.write_html(plot_filepath)
 
-            plot_url_name = f"plot_url_{idx}"
+            # plot_url_name = f"plot_url_{idx}"
+            plot_url_name = f"View Pallet {idx+1}"
             # Make response
             res["Success"] = True
             boxname = f"box_{idx+1}"

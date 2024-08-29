@@ -1,0 +1,84 @@
+{
+    "pallet": [
+        {
+            "id": "6",
+            "name": "Container 6"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                589.8,
+                243.8,
+                259.1
+            ],
+            "weight": 28080,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "6"
+        }
+    ],
+    "item": [
+        {
+            "name": "Dyson DC34 Animal",
+            "WHD": [
+                170.0,
+                82.0,
+                46.0
+            ],
+            "count": 15,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 85.12,
+            "color": "red",
+            "pallet": "6"
+        },
+        {
+            "name": "wash",
+            "WHD": [
+                85.0,
+                60.0,
+                60.0
+            ],
+            "count": 18,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 10,
+            "color": "yellow",
+            "pallet": "6"
+        },
+        {
+            "name": "cabint",
+            "WHD": [
+                60.0,
+                80.0,
+                200.0
+            ],
+            "count": 15,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 80,
+            "color": "blue",
+            "pallet": "6"
+        },
+        {
+            "name": "server",
+            "WHD": [
+                70.0,
+                100.0,
+                30.0
+            ],
+            "count": 42,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 20,
+            "color": "green",
+            "pallet": "6"
+        }
+    ]
+}

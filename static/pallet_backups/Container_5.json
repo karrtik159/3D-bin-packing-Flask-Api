@@ -1,0 +1,99 @@
+{
+    "pallet": [
+        {
+            "id": "5",
+            "name": "Container 5"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                6.0,
+                1.0,
+                5.0
+            ],
+            "weight": 100,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "5"
+        }
+    ],
+    "item": [
+        {
+            "name": "Box-1",
+            "WHD": [
+                2.0,
+                1.0,
+                3.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "yellow",
+            "pallet": "5"
+        },
+        {
+            "name": "Box-2",
+            "WHD": [
+                3.0,
+                1.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "pink",
+            "pallet": "5"
+        },
+        {
+            "name": "Box-3",
+            "WHD": [
+                2.0,
+                1.0,
+                3.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "brown",
+            "pallet": "5"
+        },
+        {
+            "name": "Box-4",
+            "WHD": [
+                2.0,
+                1.0,
+                3.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "cyan",
+            "pallet": "5"
+        },
+        {
+            "name": "Box-5",
+            "WHD": [
+                2.0,
+                1.0,
+                3.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "5"
+        }
+    ]
+}

@@ -558,15 +558,25 @@ class Bin:
             )
         color_list = px.colors.qualitative.Dark24
 
-        for idx, item in enumerate(self.items):
-            # Combine the volume and the item's name to create a unique key
-            unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
+        # for idx, item in enumerate(self.items):
+        #     # Combine the volume and the item's name to create a unique key
+        #     unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
 
-            # Select a color based on the unique key
-            item_color = color_list[unique_key % len(color_list)]
+        #     # Select a color based on the unique key
+        #     item_color = color_list[unique_key % len(color_list)]
+
+        #     # Plot the item with the selected color
+        #     figure = item._plot(item_color, figure)
+        for idx, item in enumerate(self.items):
+            #     # Combine the volume and the item's name to create a unique key
+            #     unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
+
+            #     # Select a color based on the unique key
+            #     item_color = color_list[unique_key % len(color_list)]
 
             # Plot the item with the selected color
-            figure = item._plot(item_color, figure)
+            # print(item.color)
+            figure = item._plot(item.color, figure)
 
         camera = dict(
             up=dict(x=0, y=0, z=1),

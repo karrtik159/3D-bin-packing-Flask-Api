@@ -24,7 +24,7 @@
         <div class="sample-card" data-sample-file="{{ sample_file }}">
           <button type="button"
                   class="btn btn-secondary"
-                  onclick="showSampleModal('{{ sample_file }}')">View Sample</button>
+                  onclick="showSampleModal('{{ sample_file }}')">View {{ sample_file }}</button>
         </div>
       {% endfor %}
     </div>
@@ -58,7 +58,7 @@
   const sampleFiles = {{ sample_files | tojson }};
 
   function loadSampleData(file) {
-    return fetch(`/static/jsons/${file}`)
+    return fetch(`/static/pallet_backups/${file}`)
       .then(response => response.text())
       .catch(error => console.error('Error loading sample data:', error));
   }

@@ -1,0 +1,69 @@
+{
+    "pallet": [
+        {
+            "id": "8",
+            "name": "Container 8"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                100.0,
+                50.0,
+                40.0
+            ],
+            "weight": 50,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "8"
+        }
+    ],
+    "item": [
+        {
+            "name": "itemA",
+            "WHD": [
+                20.0,
+                25.0,
+                40.0
+            ],
+            "count": 10,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "8"
+        },
+        {
+            "name": "itemB",
+            "WHD": [
+                60.0,
+                25.0,
+                20.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "blue",
+            "pallet": "8"
+        },
+        {
+            "name": "item 51",
+            "WHD": [
+                100.0,
+                10.0,
+                100.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "green",
+            "pallet": "8"
+        }
+    ]
+}

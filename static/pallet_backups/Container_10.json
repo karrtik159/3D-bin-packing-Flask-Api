@@ -1,0 +1,84 @@
+{
+    "pallet": [
+        {
+            "id": "10",
+            "name": "Container 10"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                110.0,
+                110.0,
+                110.0
+            ],
+            "weight": 10000,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "10"
+        }
+    ],
+    "item": [
+        {
+            "name": "Drawer10Base40",
+            "WHD": [
+                40.0,
+                58.5,
+                22.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 1000000,
+            "weight": 1,
+            "color": "yellow",
+            "pallet": "10"
+        },
+        {
+            "name": "Freezer, Fridge",
+            "WHD": [
+                23.9,
+                59.1,
+                24.8
+            ],
+            "count": 6,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 10000,
+            "weight": 1,
+            "color": "blue",
+            "pallet": "10"
+        },
+        {
+            "name": "TallCabinet",
+            "WHD": [
+                40.0,
+                81.5,
+                22.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 10000,
+            "weight": 1,
+            "color": "yellow",
+            "pallet": "10"
+        },
+        {
+            "name": "OverHeads (contains \"60\")",
+            "WHD": [
+                60.0,
+                18.0,
+                22.0
+            ],
+            "count": 15,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100000,
+            "weight": 1,
+            "color": "purple",
+            "pallet": "10"
+        }
+    ]
+}

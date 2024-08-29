@@ -9,23 +9,23 @@
         {
             "name": "Pallet 1",
             "WHD": [
-                120,
-                100,
-                100
+                120.0,
+                100.0,
+                100.0
             ],
             "weight": 1000,
+            "openTop": 0.0,
             "corner": 0,
-            "pallet": "20",
-            "openTop": 0
+            "pallet": "11"
         }
     ],
     "item": [
         {
             "name": "TallCabinet",
             "WHD": [
-                40,
+                40.0,
                 81.5,
-                22
+                22.0
             ],
             "count": 1,
             "updown": 1,
@@ -33,7 +33,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "green",
-            "pallet": "20"
+            "pallet": "11"
         },
         {
             "name": "Freezer, Fridge",
@@ -48,14 +48,14 @@
             "loadbear": 100,
             "weight": 1,
             "color": "blue",
-            "pallet": "20"
+            "pallet": "11"
         },
         {
             "name": "Drawer10Base40",
             "WHD": [
-                40,
+                40.0,
                 58.5,
-                22
+                22.0
             ],
             "count": 1,
             "updown": 1,
@@ -63,14 +63,14 @@
             "loadbear": 100,
             "weight": 1,
             "color": "red",
-            "pallet": "20"
+            "pallet": "11"
         },
         {
             "name": "Stainless, PowderCoated (contains \"40\")",
             "WHD": [
-                40,
-                5,
-                22
+                40.0,
+                5.0,
+                22.0
             ],
             "count": 1,
             "updown": 1,
@@ -78,14 +78,14 @@
             "loadbear": 100,
             "weight": 1,
             "color": "silver",
-            "pallet": "20"
+            "pallet": "11"
         },
         {
             "name": "OverHeads (contains \"40\")",
             "WHD": [
-                40,
-                18,
-                22
+                40.0,
+                18.0,
+                22.0
             ],
             "count": 1,
             "updown": 1,
@@ -93,14 +93,14 @@
             "loadbear": 100,
             "weight": 1,
             "color": "yellow",
-            "pallet": "20"
+            "pallet": "11"
         },
         {
             "name": "Aluminium, Procore (contains \"40\")",
             "WHD": [
-                40,
-                22,
-                1
+                40.0,
+                22.0,
+                1.0
             ],
             "count": 1,
             "updown": 1,
@@ -108,7 +108,7 @@
             "loadbear": 100,
             "weight": 1,
             "color": "gray",
-            "pallet": "20"
+            "pallet": "11"
         }
     ]
 }

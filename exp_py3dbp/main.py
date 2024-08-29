@@ -351,7 +351,7 @@ class Bin:
         if bin_volume == 0:
             return 0  # Avoid division by zero
         packed_volume = self.getPackedVolume()
-        return (packed_volume / bin_volume) * 100
+        return (bin_volume - packed_volume) / bin_volume
 
     def checkDepth(self, unfix_point):
         """fix item position z"""
@@ -631,10 +631,14 @@ class Bin:
             ):
                 fit = True
                 min_distance_for_rotation = float("inf")  # Initialize to a large number
-
-                # Check for intersection with other items in the bin
+                # Condition 2: Check for intersections with other items
                 for current_item_in_bin in self.items:
-                    current_item_dim = current_item_in_bin.getDimension()
+                    if intersect(current_item_in_bin, item):
+                        fit = False
+                        break  # Exit the loop if an intersection is found
+                    # Check for intersection with other items in the bin
+                    # for current_item_in_bin in self.items:
+                    #     current_item_dim = current_item_in_bin.getDimension()
 
                     # Check for overlap in each dimension
                     if (
@@ -656,39 +660,39 @@ class Bin:
                         fit = False
                         continue
 
-                    # Check the minimum distance constraint
-                    for placed_item in self.items:
-                        placed_item_dim = placed_item.getDimension()
+                    # # Check the minimum distance constraint
+                    # for placed_item in self.items:
+                    #     placed_item_dim = placed_item.getDimension()
 
-                        # Calculate the distance between the pivot points of the two items
-                        dx = max(pivot[0], placed_item.position[0]) - min(
-                            pivot[0] + dimension[0],
-                            placed_item.position[0] + placed_item_dim[0],
-                        )
-                        dy = max(pivot[1], placed_item.position[1]) - min(
-                            pivot[1] + dimension[1],
-                            placed_item.position[1] + placed_item_dim[1],
-                        )
-                        dz = max(pivot[2], placed_item.position[2]) - min(
-                            pivot[2] + dimension[2],
-                            placed_item.position[2] + placed_item_dim[2],
-                        )
+                    #     # Calculate the distance between the pivot points of the two items
+                    #     dx = max(pivot[0], placed_item.position[0]) - min(
+                    #         pivot[0] + dimension[0],
+                    #         placed_item.position[0] + placed_item_dim[0],
+                    #     )
+                    #     dy = max(pivot[1], placed_item.position[1]) - min(
+                    #         pivot[1] + dimension[1],
+                    #         placed_item.position[1] + placed_item_dim[1],
+                    #     )
+                    #     dz = max(pivot[2], placed_item.position[2]) - min(
+                    #         pivot[2] + dimension[2],
+                    #         placed_item.position[2] + placed_item_dim[2],
+                    #     )
 
-                        distance = sqrt(dx**2 + dy**2 + dz**2)
+                    #     distance = sqrt(dx**2 + dy**2 + dz**2)
 
-                        # Save the calculated distance in the dictionary for tracking
-                        self.distances[
-                            f'"previous item": "{placed_item.partno}", "current item": "{item.partno}", "rotation type": "{rotation}"'
-                        ] = distance
+                    #     # Save the calculated distance in the dictionary for tracking
+                    #     self.distances[
+                    #         f'"previous item": "{placed_item.partno}", "current item": "{item.partno}", "rotation type": "{rotation}"'
+                    #     ] = distance
 
-                        # Track the smallest distance for this rotation
-                        if distance < min_distance_for_rotation:
-                            min_distance_for_rotation = distance
+                    #     # Track the smallest distance for this rotation
+                    #     if distance < min_distance_for_rotation:
+                    #         min_distance_for_rotation = distance
 
-                        # If the distance is less than the minimum required, invalidate this rotation
-                        # if distance < min_distance:
-                        #     fit = False
-                        #     break
+                    # If the distance is less than the minimum required, invalidate this rotation
+                    # if distance < min_distance:
+                    #     fit = False
+                    #     break
 
                     # If the item fits within the bin, meets weight, intersection, and distance requirements
                     if fit:
@@ -710,14 +714,12 @@ class Bin:
 
                         surface_ratios = [surface_area_1 / longest_side]
 
-                        valid_rotations.append(
-                            (rotation, min_distance_for_rotation, surface_ratios)
-                        )
+                        valid_rotations.append((rotation, 0, surface_ratios))
 
         # If there are valid rotations, select the one with the best criteria
         if valid_rotations:
             # Sort by minimum distance first (in descending order) and then by surface ratio (in ascending order)
-            valid_rotations.sort(key=lambda x: (-x[1], x[2]))
+            valid_rotations.sort(key=lambda x: (x[2]))
             return [valid_rotations[0][0]]
 
         return []
@@ -777,17 +779,18 @@ class Bin:
                     showlegend=False,
                 )
             )
-        color_list = px.colors.qualitative.Dark24
+        # color_list = px.colors.qualitative.Dark24
 
         for idx, item in enumerate(self.items):
-            # Combine the volume and the item's name to create a unique key
-            unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
+            #     # Combine the volume and the item's name to create a unique key
+            #     unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
 
-            # Select a color based on the unique key
-            item_color = color_list[unique_key % len(color_list)]
+            #     # Select a color based on the unique key
+            #     item_color = color_list[unique_key % len(color_list)]
 
             # Plot the item with the selected color
-            figure = item._plot(item_color, figure)
+            # print(item.color)
+            figure = item._plot(item.color, figure)
 
         camera = dict(
             up=dict(x=0, y=0, z=1),
@@ -833,203 +836,6 @@ class Bin:
         # print(self.distances)
         return figure
 
-    # def _plot(self, figure: Type[go.Figure] = None) -> Type[go.Figure]:
-    #     """Adds the plot of a container with its boxes to a given figure, including a pallet below the box.
-
-    #     Parameters
-    #     ----------
-    #     figure: go.Figure, default = None
-    #         A plotly figure where the box and pallet should be plotted.
-    #     Returns
-    #     -------
-    #         go.Figure
-    #     """
-    #     if figure is None:
-    #         figure = go.Figure()
-
-    #     def add_pallet_to_figure(
-    #         figure,
-    #         position,
-    #         size,
-    #         slat_thickness=0.05,
-    #         slat_spacing=set2Decimal(0.05, 1),
-    #     ):
-    #         """Adds a pallet-like structure to the figure."""
-    #         width, depth, height = size
-    #         x0, y0, z0 = position
-
-    #         # Number of slats based on the depth and spacing
-    #         num_slats = int(depth // slat_spacing)
-    #         slat_width = (depth - (num_slats - 1) * slat_spacing) / num_slats
-
-    #         # Define pallet slats
-    #         for i in range(num_slats):
-    #             slat_z = z0 + height
-    #             slat_y_start = y0 + i * (slat_width + slat_spacing)
-    #             slat_y_end = slat_y_start + slat_width
-
-    #             # Vertices for each slat
-    #             slat_vertices = [
-    #                 [x0, slat_y_start, slat_z],
-    #                 [x0 + width, slat_y_start, slat_z],
-    #                 [x0, slat_y_end, slat_z],
-    #                 [x0 + width, slat_y_end, slat_z],
-    #             ]
-
-    #             # Add edges to the plot
-    #             for m in range(len(slat_vertices)):
-    #                 for n in range(m + 1, len(slat_vertices)):
-    #                     figure.add_trace(
-    #                         go.Scatter3d(
-    #                             x=[slat_vertices[m][0], slat_vertices[n][0]],
-    #                             y=[slat_vertices[m][1], slat_vertices[n][1]],
-    #                             z=[slat_vertices[m][2], slat_vertices[n][2]],
-    #                             mode="lines",
-    #                             line=dict(color="brown", width=4),
-    #                             showlegend=False,
-    #                         )
-    #                     )
-
-    #         # Add supporting blocks and runners
-    #         block_width = width * set2Decimal(10, 1)
-    #         runner_height = height * set2Decimal(15, 1)
-
-    #         # Positions for blocks
-    #         block_positions = [
-    #             (x0, y0, z0),
-    #             (x0 + width - block_width, y0, z0),
-    #             (x0, y0 + depth - slat_width, z0),
-    #             (x0 + width - block_width, y0 + depth - slat_width, z0),
-    #         ]
-
-    #         # Add the blocks
-    #         for bx, by, bz in block_positions:
-    #             block_vertices = generate_vertices(
-    #                 [block_width, slat_width, runner_height], [bx, by, bz], gap=0
-    #             ).T
-    #             bx, by, bz = (
-    #                 block_vertices[0, :],
-    #                 block_vertices[1, :],
-    #                 block_vertices[2, :],
-    #             )
-    #             for m in range(len(bx)):
-    #                 for n in range(m + 1, len(bx)):
-    #                     figure.add_trace(
-    #                         go.Scatter3d(
-    #                             x=[bx[m], bx[n]],
-    #                             y=[by[m], by[n]],
-    #                             z=[bz[m], bz[n]],
-    #                             mode="lines",
-    #                             line=dict(color="black", width=3),
-    #                             showlegend=False,
-    #                         )
-    #                     )
-
-    #         return figure
-
-    #     # Add the pallet below the main box
-    #     pallet_position = [
-    #         self.position[0],
-    #         self.position[1],
-    #         self.position[2] - set2Decimal(5, 2),
-    #     ]  # Position just below the box
-    #     pallet_size = [
-    #         self.width,
-    #         self.height,
-    #         set2Decimal(0.2, 2),
-    #     ]  # Adjust size as needed
-    #     figure = add_pallet_to_figure(figure, pallet_position, pallet_size)
-
-    #     # Generate vertices and edge pairs for the main box
-    #     vertices = generate_vertices(
-    #         [self.width, self.height, self.depth], self.position, self.gap
-    #     ).T
-    #     x, y, z = vertices[0, :], vertices[1, :], vertices[2, :]
-    #     edge_pairs = [
-    #         (0, 1),
-    #         (0, 2),
-    #         (0, 4),
-    #         (1, 3),
-    #         (1, 5),
-    #         (2, 3),
-    #         (2, 6),
-    #         (3, 7),
-    #         (4, 5),
-    #         (4, 6),
-    #         (5, 7),
-    #         (6, 7),
-    #     ]
-
-    #     # Add a line between each pair of edges to the figure
-    #     for m, n in edge_pairs:
-    #         vert_x = np.array([x[m], x[n]])
-    #         vert_y = np.array([y[m], y[n]])
-    #         vert_z = np.array([z[m], z[n]])
-    #         figure.add_trace(
-    #             go.Scatter3d(
-    #                 x=vert_x,
-    #                 y=vert_y,
-    #                 z=vert_z,
-    #                 mode="lines",
-    #                 line=dict(color="yellow", width=3),
-    #                 showlegend=False,
-    #             )
-    #         )
-    #     color_list = px.colors.qualitative.Dark24
-
-    #     for idx, item in enumerate(self.items):
-    #         # Combine the volume and the item's name to create a unique key
-    #         unique_key = int(item.getVolume()) + sum(ord(char) for char in item.name)
-
-    #         # Select a color based on the unique key
-    #         item_color = color_list[unique_key % len(color_list)]
-
-    #         # Plot the item with the selected color
-    #         figure = item._plot(item_color, figure)
-
-    #     camera = dict(
-    #         up=dict(x=0, y=0, z=1),
-    #         center=dict(x=0, y=0, z=0),
-    #         eye=dict(x=1.25, y=1.25, z=1.25),
-    #     )
-
-    #     # Update figure properties for improved visualization
-    #     figure.update_layout(
-    #         showlegend=True,
-    #         scene_camera=camera,
-    #         width=1600,
-    #         height=900,
-    #         template="plotly_dark",
-    #     )
-    #     max_x = self.position[0] + self.width
-    #     max_y = self.position[1] + self.height
-    #     max_z = self.position[2] + self.depth
-    #     aspect_ratio = dict(
-    #         x=self.width / max([self.width, self.height, self.depth]),
-    #         y=self.height / max([self.width, self.height, self.depth]),
-    #         z=self.depth / max([self.width, self.height, self.depth]),
-    #     )
-    #     figure.update_layout(
-    #         scene=dict(
-    #             xaxis=dict(nticks=int(max_x + 2), range=[0, max_x + 5]),
-    #             yaxis=dict(nticks=int(max_y + 2), range=[0, max_y + 5]),
-    #             zaxis=dict(nticks=int(max_z + 2), range=[0, max_z + 5]),
-    #             # aspectmode="cube",
-    #             aspectratio=aspect_ratio,
-    #         ),
-    #         width=1600,
-    #         margin=dict(r=10, l=10, b=10, t=10),
-    #     )
-    #     figure.update_scenes(
-    #         xaxis_showgrid=True, yaxis_showgrid=True, zaxis_showgrid=True
-    #     )
-    #     figure.update_scenes(
-    #         xaxis_showticklabels=True,
-    #         yaxis_showticklabels=True,
-    #         zaxis_showticklabels=True,
-    #     )
-    #     return figure
-
     def canFitItem(self, item):
         """Check if the item can fit in the bin."""
         return (
@@ -1058,17 +864,6 @@ class Packer:
         # self.apex = []
         self.best_utilization = 0
         self.best_combination = None
-        # self.population_size = population_size
-        # self.generations = generations
-        # self.mutation_rate = mutation_rate
-        # self.crossover_rate = crossover_rate
-
-        self.population_size = 50
-        self.generations = 10
-        self.mutation_rate = 0.05
-        self.crossover_rate = 0.8
-        self.best_fitness = 0
-        self.best_chromosome = None
 
     def addBin(self, bin):
         """ """
@@ -1225,63 +1020,6 @@ class Packer:
                 result.append(0)
         return result
 
-    # def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
-    #     """
-    #     Packs an item into a bin.
-
-    #     Args:
-    #         bin (Bin): The bin to pack the item into.
-    #         item (Item): The item to be packed.
-    #         fix_point (bool): Whether to fix the item's position at (0, 0, 0).
-    #         check_stable (bool): Whether to check if the bin is stable after packing.
-    #         support_surface_ratio (float): The ratio of the item's support surface to the bin's surface.
-
-    #     Returns:
-    #         None
-
-    #     """
-
-    #     fitted = False
-    #     bin.fix_point = fix_point
-    #     bin.check_stable = check_stable
-    #     bin.support_surface_ratio = support_surface_ratio
-
-    #     # first put item on (0,0,0) , if corner exist ,first add corner in box.
-    #     if bin.corner != 0 and not bin.items:
-    #         corner_lst = bin.addCorner()
-    #         for i in range(len(corner_lst)):
-    #             bin.putCorner(i, corner_lst[i])
-
-    #     elif not bin.items:
-    #         response = bin.putItem(item, item.position, 0)
-
-    #         if not response:
-    #             print(item.name, "can't be placed 1")
-    #             bin.unfitted_items.append(item)
-
-    #         return
-
-    #     for axis in range(0, 3):
-    #         items_in_bin = bin.items
-    #         for ib in items_in_bin:
-    #             pivot = [0, 0, 0]
-    #             w, h, d = ib.getDimension()
-    #             if axis == Axis.WIDTH:
-    #                 pivot = [ib.position[0] + w, ib.position[1], ib.position[2]]
-    #             elif axis == Axis.HEIGHT:
-    #                 pivot = [ib.position[0], ib.position[1] + h, ib.position[2]]
-    #             elif axis == Axis.DEPTH:
-    #                 pivot = [ib.position[0], ib.position[1], ib.position[2] + d]
-
-    #             if bin.putItem(item, pivot, axis):
-    #                 fitted = True
-    #                 break
-    #         if fitted:
-    #             break
-    #     if not fitted:
-    #         print(item.name, "can't be placed 2")
-
-    #         bin.unfitted_items.append(item)
     def pack2Bin(self, bin, item, fix_point, check_stable, support_surface_ratio):
         """
         Packs an item into a bin.
@@ -1312,7 +1050,7 @@ class Packer:
             response = bin.putItem(item, item.position, 0)
 
             if not response:
-                print(item.name, "can't be placed 1")
+                # print(item.name, "can't be placed 1")
                 if item not in bin.unfitted_items:
                     bin.unfitted_items.append(item)
 
@@ -1338,10 +1076,10 @@ class Packer:
         if not fitted:
 
             if item not in bin.unfitted_items:
-                print(item.name, "can't be placed 2")
+                # print(item.name, "can't be placed 2")
                 bin.unfitted_items.append(item)
 
-    def pack(
+    def old_pack(
         self,
         bigger_first=False,
         distribute_items=True,
@@ -1443,119 +1181,125 @@ class Packer:
                 result.append([i] + sub_result)  # prepend the current bin to the result
         return result
 
-    # def pack(
-    #     self,
-    #     bigger_first=False,
-    #     distribute_items=True,
-    #     fix_point=True,
-    #     check_stable=True,
-    #     support_surface_ratio=0.75,
-    #     binding=[],
-    #     number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
-    #     gap_on=False,
-    #     gap=0,
-    #     use_greedy=False,
-    #     use_combinations=Fa,  # New parameter to use combinations
-    # ):
-    #     """pack master func"""
-    #     # set decimals
-    #     for bin in self.bins:
-    #         bin.formatNumbers(number_of_decimals)
+    def pack(
+        self,
+        bigger_first=False,
+        distribute_items=True,
+        fix_point=True,
+        check_stable=True,
+        support_surface_ratio=0.75,
+        binding=[],
+        number_of_decimals=DEFAULT_NUMBER_OF_DECIMALS,
+        gap_on=False,
+        gap=0,
+        use_greedy=False,
+        use_combinations=True,  # New parameter to use combinations
+    ):
+        """pack master func"""
+        # set decimals
+        for bin in self.bins:
+            bin.formatNumbers(number_of_decimals)
 
-    #     for item in self.items:
-    #         item.formatNumbers(number_of_decimals)
-    #     # add binding attribute
-    #     self.binding = binding
-    #     # Bin : sorted by volume
-    #     self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
-    #     # Item : sorted by volume -> sorted by loadbear -> sorted by level -> binding
-    #     self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
-    #     self.items.sort(key=lambda item: item.loadbear, reverse=True)
-    #     self.items.sort(key=lambda item: item.level, reverse=False)
+        for item in self.items:
+            item.formatNumbers(number_of_decimals)
+        # add binding attribute
+        self.binding = binding
+        # Bin : sorted by volume
+        self.bins.sort(key=lambda bin: bin.getVolume(), reverse=bigger_first)
+        # Item : sorted by volume -> sorted by loadbear -> sorted by level -> binding
+        self.items.sort(key=lambda item: item.getVolume(), reverse=bigger_first)
+        self.items.sort(key=lambda item: item.loadbear, reverse=True)
+        self.items.sort(key=lambda item: item.level, reverse=False)
 
-    #     if binding != []:
-    #         self.sortBinding(bin)
+        if binding != []:
+            self.sortBinding(bin)
 
-    #     if use_combinations:
-    #         bin_count = len(self.bins)
-    #         item_count = len(self.items)
-    #         print("start")
-    #         all_combinations = self.combinations(item_count, bin_count)
-    #         print("stop")
+        if use_combinations:
+            # bin_count = len(self.bins)
+            item_count = len(self.items)
+            # print("start")
 
-    #         best_combination = None
-    #         best_utilization = 0
+            best_combination = None
+            best_utilization = 0
 
-    #         for combination in all_combinations:
-    #             for idx, bin in enumerate(self.bins):
-    #                 bin.clearBin()  # Reset the bin
+            for idx, bin in enumerate(self.bins):
+                item_count -= len(bin.items)
+                if idx > 0:
+                    self.items = [
+                        item
+                        for item in self.items
+                        if item not in self.bins[idx - 1].items
+                    ]
+                item_count = len(self.items)
+                bin.clearBin()  # Reset the bin
 
-    #             for item_index, bin_index in enumerate(combination):
-    #                 self.pack2Bin(
-    #                     self.bins[bin_index],
-    #                     self.items[item_index],
-    #                     fix_point,
-    #                     check_stable,
-    #                     support_surface_ratio,
-    #                 )
+                all_combinations = self.combinations(item_count, 1)
+                for combination in all_combinations:
 
-    #             current_utilization = (
-    #                 sum(bin.getUtilization() for bin in self.bins) / bin_count
-    #             )
-    #             if current_utilization > best_utilization:
-    #                 best_utilization = current_utilization
-    #                 best_combination = combination
+                    for item_index, bin_index in enumerate(combination):
+                        self.pack2Bin(
+                            self.bins[idx],
+                            self.items[item_index],
+                            fix_point,
+                            check_stable,
+                            support_surface_ratio,
+                        )
 
-    #         if best_combination:
-    #             for idx, bin in enumerate(self.bins):
-    #                 bin.clearBin()
-    #             for item_index, bin_index in enumerate(best_combination):
-    #                 self.pack2Bin(
-    #                     self.bins[bin_index],
-    #                     self.items[item_index],
-    #                     fix_point,
-    #                     check_stable,
-    #                     support_surface_ratio,
-    #                 )
+                    current_utilization = bin.getUtilization() / 100
+                    if current_utilization > best_utilization:
+                        best_utilization = current_utilization
+                        best_combination = combination
 
-    #     else:
-    #         for idx, bin in enumerate(self.bins):
-    #             bin.gap = int(gap) if gap_on else 0
-    #             for item in self.items:
-    #                 item.gap = int(gap) if gap_on else 0
-    #                 self.pack2Bin(
-    #                     bin, item, fix_point, check_stable, support_surface_ratio
-    #                 )
+                if best_combination:
+                    bin.clearBin()
+                    for item_index, bin_index in enumerate(best_combination):
+                        self.pack2Bin(
+                            self.bins[idx],
+                            self.items[item_index],
+                            fix_point,
+                            check_stable,
+                            support_surface_ratio,
+                        )
+            # print("stop")
 
-    #             if binding != []:
-    #                 self.items.sort(
-    #                     key=lambda item: item.getVolume(), reverse=bigger_first
-    #                 )
-    #                 self.items.sort(key=lambda item: item.loadbear, reverse=True)
+        else:
+            for idx, bin in enumerate(self.bins):
+                bin.gap = int(gap) if gap_on else 0
+                for item in self.items:
+                    item.gap = int(gap) if gap_on else 0
+                    self.pack2Bin(
+                        bin, item, fix_point, check_stable, support_surface_ratio
+                    )
 
-    #                 bin.items = []
-    #                 bin.unfitted_items = self.unfit_items
-    #                 bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
-    #                 for item in self.items:
-    #                     self.pack2Bin(
-    #                         bin, item, fix_point, check_stable, support_surface_ratio
-    #                     )
+                if binding != []:
+                    self.items.sort(
+                        key=lambda item: item.getVolume(), reverse=bigger_first
+                    )
+                    self.items.sort(key=lambda item: item.loadbear, reverse=True)
 
-    #             self.bins[idx].gravity = self.gravityCenter(bin)
+                    bin.items = []
+                    bin.unfitted_items = self.unfit_items
+                    bin.fit_items = np.array([[0, bin.width, 0, bin.height, 0, 0]])
+                    for item in self.items:
+                        self.pack2Bin(
+                            bin, item, fix_point, check_stable, support_surface_ratio
+                        )
 
-    #             if distribute_items:
-    #                 for bitem in bin.items:
-    #                     no = bitem.partno
-    #                     for item in self.items:
-    #                         if item.partno == no:
-    #                             self.items.remove(item)
-    #                             break
+                self.bins[idx].gravity = self.gravityCenter(bin)
 
-    #     self.putOrder()
+                if distribute_items:
+                    for bitem in bin.items:
+                        no = bitem.partno
+                        for item in self.items:
+                            if item.partno == no:
+                                self.items.remove(item)
+                                break
 
-    #     if self.items:
-    #         self.unfit_items = copy.deepcopy(self.items)
-    #         self.items = []
+        self.putOrder()
+
+        if self.items:
+            self.unfit_items = copy.deepcopy(self.items)
+            self.items = []
 
     # def _initialize(self, number_of_decimals, binding, bigger_first):
     #     """

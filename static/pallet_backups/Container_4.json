@@ -1,0 +1,249 @@
+{
+    "pallet": [
+        {
+            "id": "4",
+            "name": "Container 4"
+        }
+    ],
+    "box": [
+        {
+            "name": "Pallet 1",
+            "WHD": [
+                5.6875,
+                10.75,
+                15.0
+            ],
+            "weight": 70,
+            "openTop": 0.0,
+            "corner": 0,
+            "pallet": "4"
+        }
+    ],
+    "item": [
+        {
+            "name": "50g [powder 1]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 2]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "blue",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 3]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "gray",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 4]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "orange",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 5]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "lawngreen",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 6]",
+            "WHD": [
+                2.0,
+                2.0,
+                4.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "purple",
+            "pallet": "4"
+        },
+        {
+            "name": "50g [powder 7]",
+            "WHD": [
+                1.0,
+                1.0,
+                5.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "yellow",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 8]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "red",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 9]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "brown",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 10]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "cyan",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 11]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "olive",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 12]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "darkgreen",
+            "pallet": "4"
+        },
+        {
+            "name": "250g [powder 13]",
+            "WHD": [
+                4.0,
+                4.0,
+                2.0
+            ],
+            "count": 1,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "orange",
+            "pallet": "4"
+        },
+        {
+            "name": "item11",
+            "WHD": [
+                2.0,
+                5.0,
+                2.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 1,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "purple",
+            "pallet": "4"
+        },
+        {
+            "name": "item14",
+            "WHD": [
+                6.0,
+                3.0,
+                3.0
+            ],
+            "count": 5,
+            "updown": 1,
+            "level": 0,
+            "loadbear": 100,
+            "weight": 1,
+            "color": "purple",
+            "pallet": "4"
+        }
+    ]
+}

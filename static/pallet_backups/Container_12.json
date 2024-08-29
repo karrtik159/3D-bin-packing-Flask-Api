@@ -9,56 +9,56 @@
         {
             "name": "Pallet 1",
             "WHD": [
-                85,
-                85,
-                85
+                85.0,
+                85.0,
+                85.0
             ],
             "weight": 10000,
+            "openTop": 0.0,
             "corner": 0,
-            "pallet": "12",
-            "openTop": 0
+            "pallet": "12"
         },
         {
             "name": "Pallet 2",
             "WHD": [
-                100,
-                100,
-                100
+                100.0,
+                100.0,
+                100.0
             ],
             "weight": 10000,
+            "openTop": 0.0,
             "corner": 0,
-            "pallet": "12",
-            "openTop": 0
+            "pallet": "12"
         }
     ],
     "item": [
         {
             "name": "Drawer10Base40",
             "WHD": [
-                40,
+                40.0,
                 58.5,
-                22
+                22.0
             ],
-            "count": 5,
+            "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "yellow",
             "pallet": "12"
         },
         {
             "name": "Pantry",
             "WHD": [
-                15,
+                15.0,
                 58.5,
-                22
+                22.0
             ],
-            "count": 5,
+            "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "olive",
             "pallet": "12"
         },
@@ -69,101 +69,86 @@
                 59.1,
                 24.8
             ],
-            "count": 5,
+            "count": 10,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
-            "color": "brown",
+            "weight": 100,
+            "color": "yellow",
             "pallet": "12"
         },
         {
             "name": "CornerCabinet",
             "WHD": [
-                22,
-                23,
-                22
+                22.0,
+                23.0,
+                22.0
             ],
-            "count": 5,
+            "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "pink",
             "pallet": "12"
         },
         {
             "name": "Drawer5Base40",
             "WHD": [
-                40,
+                40.0,
                 36.5,
-                22
+                22.0
             ],
-            "count": 5,
+            "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "olive",
             "pallet": "12"
         },
         {
             "name": "Door2Base62",
             "WHD": [
-                62,
+                62.0,
                 36.5,
-                22
+                22.0
             ],
-            "count": 5,
+            "count": 30,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
-            "color": "pink",
-            "pallet": "12"
-        },
-        {
-            "name": "TallCabinet",
-            "WHD": [
-                40,
-                81.5,
-                22
-            ],
-            "count": 1,
-            "updown": 1,
-            "level": 1,
-            "loadbear": 100,
-            "weight": 1,
-            "color": "yellow",
+            "weight": 100,
+            "color": "orange",
             "pallet": "12"
         },
         {
             "name": "LeftLocker",
             "WHD": [
-                20,
+                20.0,
                 81.5,
-                22
+                22.0
             ],
             "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "olive",
             "pallet": "12"
         },
         {
             "name": "RightLocker",
             "WHD": [
-                20,
+                20.0,
                 81.5,
-                22
+                22.0
             ],
             "count": 1,
             "updown": 1,
             "level": 1,
             "loadbear": 100,
-            "weight": 1,
+            "weight": 100,
             "color": "brown",
             "pallet": "12"
         }

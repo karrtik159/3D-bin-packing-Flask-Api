@@ -351,10 +351,10 @@
         {% for box in response['data'] %}
           {% for key, items in box.items() %}
             {%
-            if key.startswith('plot_url_') %}
+            if key.startswith('View Pallet ') %}
             <a href="{{ url_for('static', filename=items) }}"
                target="_blank"
-               class="btn btn-primary">View Plot {{ key }}</a>
+               class="btn btn-primary">{{ key }}</a>
           </div>
         {% endif %}
       {% endfor %}
